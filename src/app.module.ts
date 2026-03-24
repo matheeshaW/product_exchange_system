@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -17,6 +17,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       autoLoadEntities: true,
       synchronize: true, // ✅ dev only
     }),
+
+    BullModule.forRoot({
+      connection: {
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    },
+  })
   ],
 })
 export class AppModule {}
