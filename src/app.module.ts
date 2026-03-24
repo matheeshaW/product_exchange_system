@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { ProductsModule } from './modules/products/products.module';
+import { AuditModule } from './modules/audit/audit.module';
 
 @Module({
   imports: [
@@ -23,7 +27,15 @@ import { BullModule } from '@nestjs/bullmq';
       host: process.env.REDIS_HOST,
       port: Number(process.env.REDIS_PORT),
     },
-  })
+  }),
+
+    AuthModule,
+
+    UsersModule,
+
+    ProductsModule,
+
+    AuditModule
   ],
 })
 export class AppModule {}
