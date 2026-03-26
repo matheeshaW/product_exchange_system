@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,
+  InternalServerErrorException
+ } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -10,9 +12,15 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
+ async findByEmail(email: string): Promise<User | null> {
+  try {
+    return await this.userRepository.findOne({
+      where: { email, deletedAt: IsNull() },
+    });
+  } catch (error) {
+    throw new InternalServerErrorException('Failed to fetch user');
   }
+}
 
   async createUser(email: string, password: string): Promise<User> {
     const user = this.userRepository.create({ email, password });
