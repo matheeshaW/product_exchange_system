@@ -7,6 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { ItemsModule } from './modules/items/items.module';
+import { ItemImagesModule } from './modules/item-images/item-images.module';
 
 @Module({
   imports: [
@@ -38,7 +39,9 @@ import { ItemsModule } from './modules/items/items.module';
 
     AuditModule,
 
-    ItemsModule
+    ItemsModule,
+
+    ItemImagesModule
   ],
 })
 export class AppModule {}
