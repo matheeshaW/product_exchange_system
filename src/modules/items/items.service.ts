@@ -1,12 +1,15 @@
 import {
   Injectable,
   InternalServerErrorException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Item } from './entities/item.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { RedisService } from 'src/common/redis/redis.service';
+import type { StorageService } from 'src/common/storage/storage.interface';
+import { ItemImagesService } from '../item-images/item-images.service';
 
 @Injectable()
 export class ItemsService {
@@ -14,29 +17,46 @@ export class ItemsService {
     @InjectRepository(Item)
     private readonly itemRepository: Repository<Item>,
     private readonly redisService: RedisService,
+
+    @Inject('StorageService')
+    private readonly storageService: StorageService,
+
+    private readonly itemImagesService: ItemImagesService,
   ) {}
 
-  async createItem(dto: CreateItemDto, userId: string) {
-    try {
-      const item = this.itemRepository.create({
-        ...dto,
-        ownerId: userId,
-      });
+  async createItem(dto: CreateItemDto, userId: string, files: Express.Multer.File[]) {
+  try {
+    const item = this.itemRepository.create({
+      ...dto,
+      ownerId: userId,
+    });
 
-      const saved = await this.itemRepository.save(item);
+    const saved = await this.itemRepository.save(item);
 
-      // invalidate cache
-      await this.redisService.del('inventory:items:list');
+    // upload images
+    const imageUrls: string[] = [];
 
-      return {
-        success: true,
-        message: 'Item created successfully',
-        data: saved,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to create item');
+    for (const file of files) {
+      const url = await this.storageService.upload(file.buffer);
+      imageUrls.push(url);
     }
+
+    await this.itemImagesService.saveImages(saved.id, imageUrls);
+
+    await this.redisService.del('inventory:items:list');
+
+    return {
+      success: true,
+      message: 'Item created successfully',
+      data: {
+        ...saved,
+        images: imageUrls,
+      },
+    };
+  } catch (error) {
+    throw new InternalServerErrorException('Failed to create item');
   }
+}
 
   async getItems() {
     try {
