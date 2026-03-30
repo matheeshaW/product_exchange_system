@@ -26,8 +26,8 @@ export class Swap {
   @Column({ name: 'requested_item_id' })
   requestedItemId!: string;
 
-  @Column({ name: 'offered_item_id' })
-  offeredItemId!: string;
+  @Column({ name: 'offered_item_id', type: 'uuid', nullable: true })
+  offeredItemId!: string | null;
 
   @Column({
     type: 'enum',
@@ -35,6 +35,9 @@ export class Swap {
     default: SwapStatus.PENDING,
   })
   status!: SwapStatus;
+
+  @Column({ name: 'is_donation', default: false })
+  isDonation!: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

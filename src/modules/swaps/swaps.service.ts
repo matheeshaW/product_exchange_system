@@ -23,11 +23,12 @@ export class SwapsService {
 
 async createSwap(dto: CreateSwapDto, userId: string) {
   try {
+    // cannot swap same item
     if (dto.requestedItemId === dto.offeredItemId) {
       throw new BadRequestException('Cannot swap same item');
     }
 
-    // GET THE REQUESTED ITEM FROM DB
+    // get requested item
     const requestedItem = await this.itemRepository.findOne({
       where: { id: dto.requestedItemId },
     });
@@ -36,12 +37,25 @@ async createSwap(dto: CreateSwapDto, userId: string) {
       throw new BadRequestException('Requested item not found');
     }
 
-    //  CREATE SWAP WITH CORRECT ownerId
+    // prevent requesting your own item
+    if (requestedItem.ownerId === userId) {
+      throw new BadRequestException('Cannot request your own item');
+    }
+
+    // donation validation
+    if (!dto.isDonation && !dto.offeredItemId) {
+      throw new BadRequestException(
+        'Offered item required for swap',
+      );
+    }
+
+    // create swap
     const swap = this.swapRepository.create({
       requesterId: userId,
-      ownerId: requestedItem.ownerId, // owner id added
+      ownerId: requestedItem.ownerId,
       requestedItemId: dto.requestedItemId,
-      offeredItemId: dto.offeredItemId,
+      offeredItemId: dto.isDonation ? null : dto.offeredItemId,
+      isDonation: dto.isDonation,
     });
 
     return this.swapRepository.save(swap);
