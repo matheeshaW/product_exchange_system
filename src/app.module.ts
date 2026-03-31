@@ -9,6 +9,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { ItemsModule } from './modules/items/items.module';
 import { ItemImagesModule } from './modules/item-images/item-images.module';
 import { SwapsModule } from './modules/swaps/swaps.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -44,7 +45,9 @@ import { SwapsModule } from './modules/swaps/swaps.module';
 
     ItemImagesModule,
 
-    SwapsModule
+    SwapsModule,
+
+    ChatModule
   ],
 })
 export class AppModule {}
