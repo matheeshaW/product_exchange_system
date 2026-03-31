@@ -9,4 +9,14 @@ export class RegisterDto {
   @MinLength(8)
   @MaxLength(255)
   password!: string;
+
+  @IsString()
+  @MaxLength(100)
+  name!: string;
+
+  @IsString()
+  province!: string;
+
+  @IsString()
+  district!: string;
 }

@@ -18,6 +18,15 @@ export class User {
   @Column({ length: 255 })
   password!: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  name!: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  province!: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  district!: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

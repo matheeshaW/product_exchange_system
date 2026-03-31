@@ -14,8 +14,8 @@ import { UnauthorizedException } from '@nestjs/common';
 @Injectable()
 export class AuthService {
   constructor(private readonly usersService: UsersService,
-  private readonly jwtService: JwtService,
-  ) {}
+    private readonly jwtService: JwtService,
+  ) { }
 
   async register(dto: RegisterDto) {
     try {
@@ -30,6 +30,9 @@ export class AuthService {
       const user = await this.usersService.createUser(
         dto.email,
         hashedPassword,
+        dto.name,
+        dto.province,
+        dto.district,
       );
 
       return {
@@ -47,7 +50,7 @@ export class AuthService {
     }
   }
 
-   async login(dto: LoginDto) {
+  async login(dto: LoginDto) {
     try {
       const user = await this.usersService.findByEmail(dto.email);
 
