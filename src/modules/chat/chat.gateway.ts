@@ -62,7 +62,7 @@ export class ChatGateway {
     },
     @ConnectedSocket() client: Socket,
   ) {
-    // 🔥 extract user from handshake
+    //  extract user from handshake
     const user = client.data.user;
 
     if (!user) {
@@ -71,7 +71,7 @@ export class ChatGateway {
 
     const saved = await this.chatService.saveMessage(
       data.swapId,
-      user.userId, // ✅ from token
+      user.userId, // from token
       data.message,
     );
 
