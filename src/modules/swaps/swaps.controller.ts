@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Patch,
   Body,
   Param,
@@ -15,7 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('swaps')
 @UseGuards(JwtAuthGuard)
 export class SwapsController {
-  constructor(private readonly swapsService: SwapsService) {}
+  constructor(private readonly swapsService: SwapsService) { }
 
   @Post()
   createSwap(@Body() dto: CreateSwapDto, @Request() req) {
@@ -31,6 +32,17 @@ export class SwapsController {
     return this.swapsService.updateSwap(
       id,
       dto,
+      req.user.userId,
+    );
+  }
+
+  @Get(':id/contact')
+  getContacts(
+    @Param('id') id: string,
+    @Request() req,
+  ) {
+    return this.swapsService.getSwapContacts(
+      id,
       req.user.userId,
     );
   }

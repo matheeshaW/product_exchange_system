@@ -10,6 +10,7 @@ import { Swap, SwapStatus } from './entities/swap.entity';
 import { CreateSwapDto } from './dto/create-swap.dto';
 import { UpdateSwapDto } from './dto/update-swap.dto';
 import { Item } from '../items/entities/item.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class SwapsService {
@@ -19,6 +20,9 @@ export class SwapsService {
 
     @InjectRepository(Item) 
     private readonly itemRepository: Repository<Item>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
 async createSwap(dto: CreateSwapDto, userId: string) {
@@ -97,4 +101,69 @@ async createSwap(dto: CreateSwapDto, userId: string) {
       throw new InternalServerErrorException('Failed to update swap');
     }
   }
+
+
+  async getSwapContacts(swapId: string, userId: string) {
+  try {
+    const swap = await this.swapRepository.findOne({
+      where: { id: swapId },
+    });
+
+    if (!swap) {
+      throw new BadRequestException('Swap not found');
+    }
+
+    //  access control
+    if (
+      swap.requesterId !== userId &&
+      swap.ownerId !== userId
+    ) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    //  must be accepted
+    if (swap.status !== SwapStatus.ACCEPTED) {
+      throw new BadRequestException(
+        'Contacts available only after approval',
+      );
+    }
+
+    //  fetch users
+    const requester = await this.userRepository.findOne({
+      where: { id: swap.requesterId },
+    });
+
+    const owner = await this.userRepository.findOne({
+      where: { id: swap.ownerId },
+    });
+
+    return {
+      success: true,
+      message: 'Contact details fetched successfully',
+      data: {
+        requester: {
+          name: requester?.name,
+          email: requester?.email,
+          phone: requester?.phone,
+        },
+        owner: {
+          name: owner?.name,
+          email: owner?.email,
+          phone: owner?.phone,
+        },
+      },
+    };
+  } catch (error) {
+    if (
+      error instanceof BadRequestException ||
+      error instanceof ForbiddenException
+    ) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      'Failed to fetch contacts',
+    );
+  }
+}
 }

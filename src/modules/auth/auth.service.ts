@@ -31,6 +31,7 @@ export class AuthService {
         dto.email,
         hashedPassword,
         dto.name,
+        dto.phone,
         dto.province,
         dto.district,
       );
