@@ -93,16 +93,33 @@ export class ChatGateway {
     },
     @ConnectedSocket() client: Socket,
   ) {
-    //  extract user from handshake
     const user = client.data.user;
 
     if (!user) {
-      throw new Error('Unauthorized');
+      client.disconnect();
+      return;
+    }
+
+    const swap = await this.swapRepository.findOne({
+      where: { id: data.swapId },
+    });
+
+    if (!swap) {
+      client.disconnect();
+      return;
+    }
+
+    if (
+      swap.requesterId !== user.userId &&
+      swap.ownerId !== user.userId
+    ) {
+      client.disconnect();
+      return;
     }
 
     const saved = await this.chatService.saveMessage(
       data.swapId,
-      user.userId, // from token
+      user.userId,
       data.message,
     );
 
