@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { SwapsService } from './swaps.service';
 import { CreateSwapDto } from './dto/create-swap.dto';
@@ -38,7 +39,7 @@ export class SwapsController {
 
   @Get(':id/contact')
   getContacts(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Request() req,
   ) {
     return this.swapsService.getSwapContacts(
