@@ -7,6 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
+import * as jwt from 'jsonwebtoken';
 
 @WebSocketGateway({
   namespace: '/swaps',
@@ -16,7 +17,33 @@ export class ChatGateway {
   @WebSocketServer()
   server!: Server;
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) { }
+
+
+  handleConnection(client: Socket) {
+    try {
+      const token =
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization?.split(' ')[1];
+
+      if (!token) {
+        client.disconnect();
+        return;
+      }
+
+      const decoded: any = jwt.verify(
+        token,
+        process.env.JWT_SECRET as string,
+      );
+
+      client.data.user = {
+        userId: decoded.sub,
+        email: decoded.email,
+      };
+    } catch (error) {
+      client.disconnect();
+    }
+  }
 
   @SubscribeMessage('join_swap')
   handleJoin(
@@ -31,14 +58,20 @@ export class ChatGateway {
     @MessageBody()
     data: {
       swapId: string;
-      senderId: string;
       message: string;
     },
     @ConnectedSocket() client: Socket,
   ) {
+    // 🔥 extract user from handshake
+    const user = client.data.user;
+
+    if (!user) {
+      throw new Error('Unauthorized');
+    }
+
     const saved = await this.chatService.saveMessage(
       data.swapId,
-      data.senderId,
+      user.userId, // ✅ from token
       data.message,
     );
 
