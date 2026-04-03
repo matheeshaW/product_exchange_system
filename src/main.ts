@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import cookieParser from 'cookie-parser';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 
 
@@ -26,6 +27,7 @@ async function bootstrap() {
     }),
   );
   app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3000);
 }
