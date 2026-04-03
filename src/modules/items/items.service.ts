@@ -22,45 +22,52 @@ export class ItemsService {
     private readonly storageService: StorageService,
 
     private readonly itemImagesService: ItemImagesService,
-  ) {}
+  ) { }
 
   async createItem(dto: CreateItemDto, userId: string, files: Express.Multer.File[]) {
-  try {
-    const item = this.itemRepository.create({
-      ...dto,
-      ownerId: userId,
-    });
-
-    const saved = await this.itemRepository.save(item);
-
-    // upload images
-    const imageUrls: string[] = [];
-
-    for (const file of files) {
-      const url = await this.storageService.upload(file.buffer);
-      imageUrls.push(url);
-    }
-
-    await this.itemImagesService.saveImages(saved.id, imageUrls);
-
-    await this.redisService.del('inventory:items:list');
-
-    return {
-      success: true,
-      message: 'Item created successfully',
-      data: {
-        ...saved,
-        images: imageUrls,
-      },
-    };
-  } catch (error) {
-    throw new InternalServerErrorException('Failed to create item');
-  }
-}
-
-  async getItems() {
     try {
-      const cacheKey = 'inventory:items:list';
+      const item = this.itemRepository.create({
+        ...dto,
+        ownerId: userId,
+      });
+
+      const saved = await this.itemRepository.save(item);
+
+      // upload images
+      const imageUrls: string[] = [];
+
+      for (const file of files) {
+        const url = await this.storageService.upload(file.buffer);
+        imageUrls.push(url);
+      }
+
+      await this.itemImagesService.saveImages(saved.id, imageUrls);
+
+      await this.redisService.deleteByPrefix('inventory:items:'); // clear all cache
+
+      return {
+        success: true,
+        message: 'Item created successfully',
+        data: {
+          ...saved,
+          images: imageUrls,
+        },
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to create item');
+    }
+  }
+
+  async getItems(filters: {
+    search?: string;
+    category?: string;
+    condition?: string;
+    district?: string;
+    province?: string;
+  }) {
+    try {
+      //  dynamic cache key
+      const cacheKey = `inventory:items:${JSON.stringify(filters)}`;
 
       const cached = await this.redisService.get(cacheKey);
 
@@ -72,11 +79,53 @@ export class ItemsService {
         };
       }
 
-      const items = await this.itemRepository.find({
-        where: { deletedAt: IsNull() },
-        order: { createdAt: 'DESC' },
-      });
+      const query = this.itemRepository
+        .createQueryBuilder('item')
+        .where('item.deleted_at IS NULL');
 
+      //  search
+      if (filters.search) {
+        query.andWhere('LOWER(item.title) LIKE LOWER(:search)', {
+          search: `%${filters.search}%`,
+        });
+      }
+
+      //  category
+      if (filters.category) {
+        query.andWhere('item.category = :category', {
+          category: filters.category,
+        });
+      }
+
+      //  condition
+      if (filters.condition) {
+        query.andWhere('item.condition = :condition', {
+          condition: filters.condition,
+        });
+      }
+
+      //  location (join users)
+      if (filters.district || filters.province) {
+        query.leftJoin('users', 'user', 'user.id = item.owner_id');
+
+        if (filters.district) {
+          query.andWhere('user.district = :district', {
+            district: filters.district,
+          });
+        }
+
+        if (filters.province) {
+          query.andWhere('user.province = :province', {
+            province: filters.province,
+          });
+        }
+      }
+
+      const items = await query
+        .orderBy('item.created_at', 'DESC')
+        .getMany();
+
+      //  cache result
       await this.redisService.set(
         cacheKey,
         JSON.stringify(items),

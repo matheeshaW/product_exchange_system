@@ -23,4 +23,15 @@ export class RedisService {
   async del(key: string): Promise<void> {
     await this.client.del(key);
   }
+
+  async reset(): Promise<void> {
+    await this.client.flushdb();
+  }
+
+  async deleteByPrefix(prefix: string): Promise<void> {
+    const keys = await this.client.keys(prefix + '*');
+    if (keys.length > 0) {
+      await this.client.del(...keys);
+    }
+  }
 }
