@@ -10,6 +10,7 @@ import { CreateItemDto } from './dto/create-item.dto';
 import { RedisService } from 'src/common/redis/redis.service';
 import type { StorageService } from 'src/common/storage/storage.interface';
 import { ItemImagesService } from '../item-images/item-images.service';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class ItemsService {
@@ -22,6 +23,7 @@ export class ItemsService {
     private readonly storageService: StorageService,
 
     private readonly itemImagesService: ItemImagesService,
+    private readonly auditService: AuditService,
   ) { }
 
   async createItem(dto: CreateItemDto, userId: string, files: Express.Multer.File[]) {
@@ -43,102 +45,111 @@ export class ItemsService {
 
       await this.itemImagesService.saveImages(saved.id, imageUrls);
 
-      await this.redisService.deleteByPrefix('inventory:items:'); // clear all cache
-
-      return {
-        success: true,
-        message: 'Item created successfully',
-        data: {
-          ...saved,
-          images: imageUrls,
-        },
-      };
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to create item');
+      await this.redisService.deleteByPrefix('inventory:items:'); // invalidate cache
+      try { 
+      await this.auditService.logAction({
+        entityType: 'ITEM',
+        entityId: saved.id,
+        action: 'CREATED',
+        userId: userId,
+      });
+      } catch (auditError) {
+      console.error('Audit enqueuq failt for ITEM create:', auditError);
     }
+    return {
+      success: true,
+      message: 'Item created successfully',
+      data: {
+        ...saved,
+        images: imageUrls,
+      },
+    };
+  } catch(error) {
+    throw new InternalServerErrorException('Failed to create item');
   }
+}
 
   async getItems(filters: {
-    search?: string;
-    category?: string;
-    condition?: string;
-    district?: string;
-    province?: string;
-  }) {
-    try {
-      //  dynamic cache key
-      const cacheKey = `inventory:items:${JSON.stringify(filters)}`;
+  search?: string;
+  category?: string;
+  condition?: string;
+  district?: string;
+  province?: string;
+}) {
+  try {
+    //  dynamic cache key
+    const cacheKey = `inventory:items:${JSON.stringify(filters)}`;
 
-      const cached = await this.redisService.get(cacheKey);
+    const cached = await this.redisService.get(cacheKey);
 
-      if (cached) {
-        return {
-          success: true,
-          message: 'Items fetched from cache',
-          data: JSON.parse(cached),
-        };
-      }
-
-      const query = this.itemRepository
-        .createQueryBuilder('item')
-        .where('item.deleted_at IS NULL');
-
-      //  search
-      if (filters.search) {
-        query.andWhere('LOWER(item.title) LIKE LOWER(:search)', {
-          search: `%${filters.search}%`,
-        });
-      }
-
-      //  category
-      if (filters.category) {
-        query.andWhere('item.category = :category', {
-          category: filters.category,
-        });
-      }
-
-      //  condition
-      if (filters.condition) {
-        query.andWhere('item.condition = :condition', {
-          condition: filters.condition,
-        });
-      }
-
-      //  location (join users)
-      if (filters.district || filters.province) {
-        query.leftJoin('users', 'user', 'user.id = item.owner_id');
-
-        if (filters.district) {
-          query.andWhere('user.district = :district', {
-            district: filters.district,
-          });
-        }
-
-        if (filters.province) {
-          query.andWhere('user.province = :province', {
-            province: filters.province,
-          });
-        }
-      }
-
-      const items = await query
-        .orderBy('item.created_at', 'DESC')
-        .getMany();
-
-      //  cache result
-      await this.redisService.set(
-        cacheKey,
-        JSON.stringify(items),
-        60,
-      );
-
+    if (cached) {
       return {
         success: true,
-        message: 'Items fetched from database',
-        data: items,
+        message: 'Items fetched from cache',
+        data: JSON.parse(cached),
       };
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to fetch items');
     }
+
+    const query = this.itemRepository
+      .createQueryBuilder('item')
+      .where('item.deleted_at IS NULL');
+
+    //  search
+    if (filters.search) {
+      query.andWhere('LOWER(item.title) LIKE LOWER(:search)', {
+        search: `%${filters.search}%`,
+      });
+    }
+
+    //  category
+    if (filters.category) {
+      query.andWhere('item.category = :category', {
+        category: filters.category,
+      });
+    }
+
+    //  condition
+    if (filters.condition) {
+      query.andWhere('item.condition = :condition', {
+        condition: filters.condition,
+      });
+    }
+
+    //  location (join users)
+    if (filters.district || filters.province) {
+      query.leftJoin('users', 'user', 'user.id = item.owner_id');
+
+      if (filters.district) {
+        query.andWhere('user.district = :district', {
+          district: filters.district,
+        });
+      }
+
+      if (filters.province) {
+        query.andWhere('user.province = :province', {
+          province: filters.province,
+        });
+      }
+    }
+
+    const items = await query
+      .orderBy('item.created_at', 'DESC')
+      .getMany();
+
+    //  cache result
+    await this.redisService.set(
+      cacheKey,
+      JSON.stringify(items),
+      60,
+    );
+
+    return {
+      success: true,
+      message: 'Items fetched from database',
+      data: items,
+    };
+  } catch (error) {
+    throw new InternalServerErrorException('Failed to fetch items');
   }
+}
 }
