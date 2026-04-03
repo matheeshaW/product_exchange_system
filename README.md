@@ -1,98 +1,423 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Swapify Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A scalable backend system for a **product swapping & donation platform**, built with NestJS, TypeScript, and modern development practices.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Authentication & Security
 
-## Project setup
+* JWT-based authentication
+* Refresh tokens via **HttpOnly cookies**
+* Route protection using guards
+* Secure WebSocket authentication
+* Role-based access control for swaps & chat
 
-```bash
-$ npm install
+---
+
+### Item Management
+
+* Create items with image uploads (Cloudinary)
+* Soft delete support
+* Search & filtering:
+
+  * title
+  * category
+  * condition
+  * location (district, province)
+
+---
+
+### Swap & Donation System
+
+* Request item swaps
+* Support **donation mode (no return item)**
+* Accept / reject swap requests
+* Contact details shared only after approval
+
+---
+
+### Real-Time Chat
+
+* WebSocket-based chat (Socket.IO)
+* Room-based messaging per swap
+* Persistent chat history (database)
+* Secure access (only swap participants)
+
+---
+
+### Performance Optimization
+
+* Redis caching (cache-aside pattern)
+* Dynamic cache keys for filtering
+* Cache invalidation using prefix strategy
+
+---
+
+### Background Processing
+
+* BullMQ queue integration
+* Audit logging for:
+
+  * Item creation
+  * Swap creation
+* Non-blocking job processing
+
+---
+
+### API Standards
+
+* Global response format
+* Centralized error handling
+* DTO validation with class-validator
+
+---
+
+## Tech Stack
+
+* **Backend Framework:** NestJS (TypeScript)
+* **Database:** PostgreSQL + TypeORM
+* **Cache:** Redis
+* **Queue:** BullMQ
+* **Realtime:** Socket.IO (WebSockets)
+* **File Storage:** Cloudinary
+* **Authentication:** JWT + Cookies
+
+---
+
+## Project Structure
+
+```
+src/
+ ├── common/
+ │    ├── redis/
+ │    ├── storage/
+ │    ├── filters/
+ │    ├── interceptors/
+ │
+ ├── modules/
+ │    ├── auth/
+ │    ├── users/
+ │    ├── items/
+ │    ├── item-images/
+ │    ├── swaps/
+ │    ├── chat/
+ │    ├── audit/
+ │
+ ├── main.ts
+ ├── app.module.ts
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## Authentication Flow
 
-# watch mode
-$ npm run start:dev
+1. User logs in → receives:
 
-# production mode
-$ npm run start:prod
+   * Access Token (short-lived)
+   * Refresh Token (HttpOnly cookie)
+
+2. Access Token used for API requests
+
+3. Refresh endpoint issues new access token
+
+---
+
+## API Endpoints
+
+### Auth
+
+* `POST /auth/register`
+* `POST /auth/login`
+* `POST /auth/refresh`
+
+### Items
+
+* `POST /items`
+* `GET /items?search=&category=&district=...`
+
+### Swaps
+
+* `POST /swaps`
+* `PATCH /swaps/:id`
+* `GET /swaps/:id/contact`
+
+### Chat
+
+* WebSocket namespace: `/swaps`
+
+* Events:
+
+  * `join_swap`
+  * `send_message`
+  * `receive_message`
+
+* REST:
+
+  * `GET /chat/:swapId`
+
+---
+
+## Environment Variables
+
+```
+DATABASE_HOST=
+DATABASE_PORT=
+DATABASE_USER=
+DATABASE_PASSWORD=
+DATABASE_NAME=
+
+REDIS_HOST=
+REDIS_PORT=
+
+JWT_SECRET=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
 
-## Run tests
+---
+
+## Running the Project
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Docker and Docker Compose
+- Git
+
+### Setup Instructions
+
+#### 1. Clone the repository and install dependencies
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone <repository-url>
+cd cenzios/inventory-system
+npm install
 ```
 
-## Deployment
+#### 2. Configure environment variables
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Create a `.env` file in the root directory:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+```env
+# Database Configuration
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=inventory_db
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-key-change-in-production
+JWT_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Application
+APP_PORT=3000
+NODE_ENV=development
+```
+
+#### 3. Start Docker services
+
+Ensure Docker is running, then start PostgreSQL and Redis:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker-compose up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Verify services are running:
 
-## Resources
+```bash
+docker-compose ps
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+#### 4. Run database migrations (if applicable)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+TypeORM is configured with `synchronize: true` for development. The database schema will auto-sync on startup.
 
-## Support
+#### 5. Start the development server
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+npm run start:dev
+```
 
-## Stay in touch
+The server will start on `http://localhost:3000`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Accessing Services
 
-## License
+- **Backend API:** http://localhost:3000
+- **PostgreSQL:** localhost:5432
+- **Redis:** localhost:6379
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Testing the API
+
+You can use tools like Postman, Insomnia, or cURL to test endpoints:
+
+```bash
+# Register a new user
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123",
+    "name": "John Doe",
+    "phone": "1234567890",
+    "province": "Western Province",
+    "district": "Colombo"
+  }'
+
+# Login
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}'
+```
+
+### WebSocket Connection
+
+Connect to WebSocket at `ws://localhost:3000/swaps` with authentication:
+
+```javascript
+const socket = io('http://localhost:3000/swaps', {
+  auth: {
+    token: '<JWT_ACCESS_TOKEN>'
+  }
+});
+
+// Join a swap room
+socket.emit('join_swap', { swapId: '<swap-id>' });
+
+// Listen for messages
+socket.on('receive_message', (data) => {
+  console.log('New message:', data);
+});
+
+// Send a message
+socket.emit('send_message', { swapId: '<swap-id>', message: 'Hello!' });
+```
+
+### Stopping Services
+
+```bash
+# Stop the development server
+Ctrl + C
+
+# Stop Docker services
+docker-compose down
+
+# Stop and remove all Docker data
+docker-compose down -v
+```
+
+### Common Issues & Troubleshooting
+
+**Port already in use:**
+```bash
+# Change the port in .env or run on different port
+APP_PORT=3001 npm run start:dev
+```
+
+**Database connection failed:**
+- Ensure Docker is running: `docker-compose ps`
+- Check credentials in `.env` match docker-compose.yml
+- Verify network connectivity: `docker network ls`
+
+**Redis connection failed:**
+- Verify Redis container is running: `docker-compose logs redis`
+- Check Redis port not blocked by firewall
+
+**TypeScript errors:**
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+---
+
+## Notes
+
+* All responses follow a consistent format:
+
+```
+{
+  "success": true,
+  "message": "...",
+  "data": ...
+}
+```
+
+* Soft deletes are implemented using `deletedAt`
+* Redis cache uses TTL + prefix invalidation
+* Queue failures do not affect main business logic
+
+---
+
+## Future Improvements
+
+* Item recommendation system
+* Notifications (real-time)
+* Ratings & reviews
+* Admin dashboard
+
+---
+
+## Development
+
+### Available Scripts
+
+```bash
+# Start development server with hot reload
+npm run start:dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start:prod
+
+# Run tests
+npm run test
+
+# Run end-to-end tests
+npm run test:e2e
+
+# Lint code
+npm run lint
+```
+
+### Project Architecture
+
+The project follows NestJS best practices:
+
+- **Modules:** Feature-based module organization
+- **Services:** Business logic and database operations
+- **Controllers:** HTTP request handling
+- **Guards:** Authentication and authorization
+- **DTOs:** Data validation with class-validator
+- **Entities:** TypeORM database models
+- **Interceptors:** Request/response transformation
+
+### Adding New Features
+
+1. Generate new module: `npx nest g module modules/feature-name`
+2. Generate service: `npx nest g service modules/feature-name`
+3. Generate controller: `npx nest g controller modules/feature-name`
+4. Create entities, DTOs, and services
+5. Register in the appropriate module
+6. Add routes to controller
+
+---
+
+Built with attention to scalability, performance, and maintainability.
