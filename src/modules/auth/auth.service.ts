@@ -73,19 +73,46 @@ export class AuthService {
         email: user.email,
       };
 
-      const token = await this.jwtService.signAsync(payload);
+      const accessToken = this.jwtService.sign(payload, {
+        expiresIn: '15m',
+      });
+
+      const refreshToken = this.jwtService.sign(payload, {
+        expiresIn: '7d',
+      });
 
       return {
-        success: true,
-        message: 'Login successful',
-        data: {
-          accessToken: token,
-        },
-      };
+        accessToken,
+        refreshToken,
+      }
     } catch (error) {
       if (error instanceof UnauthorizedException) throw error;
 
       throw new InternalServerErrorException('Login failed');
+    }
+  }
+
+
+
+  async refresh(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token);
+
+      const payload = {
+        sub: decoded.sub,
+        email: decoded.email,
+      };
+
+      const accessToken = this.jwtService.sign(payload, {
+        expiresIn: '15m',
+      });
+
+      return {
+        success: true,
+        data: { accessToken },
+      };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
