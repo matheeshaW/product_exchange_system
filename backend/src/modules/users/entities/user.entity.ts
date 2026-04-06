@@ -7,6 +7,11 @@ import {
   DeleteDateColumn,
 } from 'typeorm';
 
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -20,6 +25,13 @@ export class User {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   name!: string | null;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role!: UserRole;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone!: string | null;

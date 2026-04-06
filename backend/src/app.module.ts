@@ -10,6 +10,7 @@ import { ItemsModule } from './modules/items/items.module';
 import { ItemImagesModule } from './modules/item-images/item-images.module';
 import { SwapsModule } from './modules/swaps/swaps.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -47,7 +48,9 @@ import { ChatModule } from './modules/chat/chat.module';
 
     SwapsModule,
 
-    ChatModule
+    ChatModule,
+
+    AdminModule
   ],
 })
 export class AppModule {}
