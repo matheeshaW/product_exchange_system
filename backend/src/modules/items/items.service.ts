@@ -4,8 +4,9 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Item } from './entities/item.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { RedisService } from 'src/common/redis/redis.service';
 import type { StorageService } from 'src/common/storage/storage.interface';
@@ -17,6 +18,8 @@ export class ItemsService {
   constructor(
     @InjectRepository(Item)
     private readonly itemRepository: Repository<Item>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly redisService: RedisService,
 
     @Inject('StorageService')
@@ -117,19 +120,37 @@ export class ItemsService {
 
     //  location (join users)
     if (filters.district || filters.province) {
-      query.leftJoin('users', 'user', 'user.id = item.owner_id');
+      const ownerQuery = this.userRepository
+        .createQueryBuilder('owner')
+        .select('owner.id', 'id')
+        .where('owner.deleted_at IS NULL');
 
       if (filters.district) {
-        query.andWhere('user.district = :district', {
+        ownerQuery.andWhere('LOWER(TRIM(owner.district)) = LOWER(TRIM(:district))', {
           district: filters.district,
         });
       }
 
       if (filters.province) {
-        query.andWhere('user.province = :province', {
+        ownerQuery.andWhere('LOWER(TRIM(owner.province)) = LOWER(TRIM(:province))', {
           province: filters.province,
         });
       }
+
+      const owners = await ownerQuery.getRawMany<{ id: string }>();
+
+      if (owners.length === 0) {
+        await this.redisService.set(cacheKey, JSON.stringify([]), 60);
+        return {
+          success: true,
+          message: 'Items fetched from database',
+          data: [],
+        };
+      }
+
+      query.andWhere('item.owner_id IN (:...ownerIds)', {
+        ownerIds: owners.map((owner) => owner.id),
+      });
     }
 
     const items = await query
