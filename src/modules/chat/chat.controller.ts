@@ -23,7 +23,7 @@ export class ChatController {
     ) {
         return this.chatService.getMessagesBySwap(
             swapId,
-            req.user.userId, // 🔥 pass user
+            req.user.userId, //  pass user
             Number(page) || 1,
             Number(limit) || 20,
         );
