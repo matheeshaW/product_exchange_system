@@ -28,6 +28,7 @@ export class UsersService {
     email: string,
     password: string,
     name: string,
+    phone: string,
     province: string,
     district: string,
   ): Promise<User> {
@@ -36,6 +37,7 @@ export class UsersService {
         email,
         password,
         name,
+        phone,
         province,
         district,
       });

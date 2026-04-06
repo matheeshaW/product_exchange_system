@@ -15,6 +15,10 @@ export class RegisterDto {
   name!: string;
 
   @IsString()
+  @MaxLength(20)
+  phone!: string;
+
+  @IsString()
   province!: string;
 
   @IsString()

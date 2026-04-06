@@ -8,6 +8,9 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import * as jwt from 'jsonwebtoken';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Swap } from '../swaps/entities/swap.entity';
 
 @WebSocketGateway({
   namespace: '/swaps',
@@ -17,7 +20,10 @@ export class ChatGateway {
   @WebSocketServer()
   server!: Server;
 
-  constructor(private readonly chatService: ChatService) { }
+  constructor(private readonly chatService: ChatService,
+    @InjectRepository(Swap)
+    private readonly swapRepository: Repository<Swap>,
+  ) { }
 
 
   handleConnection(client: Socket) {
@@ -46,10 +52,35 @@ export class ChatGateway {
   }
 
   @SubscribeMessage('join_swap')
-  handleJoin(
+  async handleJoin(
     @MessageBody() swapId: string,
     @ConnectedSocket() client: Socket,
   ) {
+    const user = client.data.user;
+
+    if (!user) {
+      client.disconnect();
+      return;
+    }
+
+    const swap = await this.swapRepository.findOne({
+      where: { id: swapId },
+    });
+
+    if (!swap) {
+      client.disconnect();
+      return;
+    }
+
+    //  access control
+    if (
+      swap.requesterId !== user.userId &&
+      swap.ownerId !== user.userId
+    ) {
+      client.disconnect();
+      return;
+    }
+
     client.join(swapId);
   }
 
@@ -62,16 +93,33 @@ export class ChatGateway {
     },
     @ConnectedSocket() client: Socket,
   ) {
-    //  extract user from handshake
     const user = client.data.user;
 
     if (!user) {
-      throw new Error('Unauthorized');
+      client.disconnect();
+      return;
+    }
+
+    const swap = await this.swapRepository.findOne({
+      where: { id: data.swapId },
+    });
+
+    if (!swap) {
+      client.disconnect();
+      return;
+    }
+
+    if (
+      swap.requesterId !== user.userId &&
+      swap.ownerId !== user.userId
+    ) {
+      client.disconnect();
+      return;
     }
 
     const saved = await this.chatService.saveMessage(
       data.swapId,
-      user.userId, // from token
+      user.userId,
       data.message,
     );
 
