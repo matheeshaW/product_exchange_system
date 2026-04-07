@@ -13,14 +13,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const login = async (email: string, password: string) => {
-    const res = await api.post<ApiResponse<{ accessToken: string }>>(
-      '/auth/login',
-      { email, password }
-    );
+    try {
+      const res = await api.post<ApiResponse<{ accessToken: string }>>(
+        '/auth/login',
+        { email, password }
+      );
 
-    const token = res.data.data.accessToken;
+      const token = res.data.data.accessToken;
 
-    setAccessToken(token);
+      setAccessToken(token);
+    } catch (error) {
+      throw new Error('Invalid credentials');
+    }
   };
 
   return (
