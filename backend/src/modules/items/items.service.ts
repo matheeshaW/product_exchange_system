@@ -4,7 +4,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, IsNull } from 'typeorm';
 import { Item } from './entities/item.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -203,6 +203,52 @@ export class ItemsService {
     };
   } catch (error) {
     throw new InternalServerErrorException('Failed to fetch items');
+  }
+}
+
+async getItemById(itemId: string) {
+  try {
+    // check cache first
+    const cacheKey = `inventory:item:${itemId}`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      return {
+        success: true,
+        message: 'Item fetched from cache',
+        data: JSON.parse(cached),
+      };
+    }
+
+    // fetch item
+    const item = await this.itemRepository.findOne({
+      where: { id: itemId, deletedAt: IsNull() },
+    });
+
+    if (!item) {
+      throw new InternalServerErrorException('Item not found');
+    }
+
+    // fetch images
+    const images = await this.itemImageRepository.find({
+      where: { itemId },
+    });
+
+    const itemWithImages = {
+      ...item,
+      images: images.map((img) => img.imageUrl),
+    };
+
+    // cache for 60 seconds
+    await this.redisService.set(cacheKey, JSON.stringify(itemWithImages), 60);
+
+    return {
+      success: true,
+      message: 'Item fetched from database',
+      data: itemWithImages,
+    };
+  } catch (error) {
+    throw new InternalServerErrorException('Failed to fetch item');
   }
 }
 }

@@ -18,7 +18,7 @@ const ItemCard = ({ item }: Props) => {
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         {/* IMAGE */}
         <img
-          src={item.images?.[0] || 'https://via.placeholder.com/300'}
+          src={item.images?.[0] || 'https://placehold.co/400'}
           alt={item.title}
           className="w-full h-48 object-cover"
         />

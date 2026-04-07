@@ -13,11 +13,9 @@ const ItemDetailsPage = () => {
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const res = await api.get<ApiResponse<Item[]>>('/items');
+        const res = await api.get<ApiResponse<Item>>(`/items/${id}`);
 
-        const found = res.data.data.find((i) => i.id === id);
-
-        setItem(found || null);
+        setItem(res.data.data);
       } catch (err) {
         console.error('Failed to fetch item');
       } finally {
@@ -36,7 +34,7 @@ const ItemDetailsPage = () => {
     <div className="p-4 max-w-3xl mx-auto">
       {/* IMAGE */}
       <img
-        src={item.images?.[0] || 'https://via.placeholder.com/400'}
+        src={item.images?.[0] || 'https://placehold.co/400'}
         alt={item.title}
         className="w-full h-80 object-cover rounded mb-4"
       />
