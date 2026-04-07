@@ -4,7 +4,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Item } from './entities/item.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -12,6 +12,7 @@ import { RedisService } from 'src/common/redis/redis.service';
 import type { StorageService } from 'src/common/storage/storage.interface';
 import { ItemImagesService } from '../item-images/item-images.service';
 import { AuditService } from '../audit/audit.service';
+import { ItemImage } from '../item-images/entities/item-image.entity';
 
 @Injectable()
 export class ItemsService {
@@ -27,6 +28,9 @@ export class ItemsService {
 
     private readonly itemImagesService: ItemImagesService,
     private readonly auditService: AuditService,
+
+    @InjectRepository(ItemImage)
+    private readonly itemImageRepository: Repository<ItemImage>,
   ) { }
 
   async createItem(dto: CreateItemDto, userId: string, files: Express.Multer.File[]) {
@@ -153,21 +157,49 @@ export class ItemsService {
       });
     }
 
-    const items = await query
-      .orderBy('item.created_at', 'DESC')
-      .getMany();
+          const items = await query
+        .orderBy('item.created_at', 'DESC')
+        .getMany();
+
+      //  fetch images for all items
+      const itemIds = items.map((item) => item.id);
+
+      let imagesMap: Record<string, string[]> = {};
+
+      if (itemIds.length > 0) {
+        const images = await this.itemImageRepository.find({
+          where: {
+            itemId: In(itemIds),
+          },
+        });
+
+        // group images by itemId
+        imagesMap = images.reduce((acc, img) => {
+          if (!acc[img.itemId]) {
+            acc[img.itemId] = [];
+          }
+          acc[img.itemId].push(img.imageUrl);
+          return acc;
+        }, {} as Record<string, string[]>);
+      }
+
+      //  merge images into items
+      const itemsWithImages = items.map((item) => ({
+        ...item,
+        images: imagesMap[item.id] || [],
+      }));
 
     //  cache result
     await this.redisService.set(
       cacheKey,
-      JSON.stringify(items),
+      JSON.stringify(itemsWithImages),
       60,
     );
 
     return {
       success: true,
       message: 'Items fetched from database',
-      data: items,
+      data: itemsWithImages,
     };
   } catch (error) {
     throw new InternalServerErrorException('Failed to fetch items');

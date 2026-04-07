@@ -21,4 +21,6 @@ export interface Item {
   condition: string;
   ownerId: string;
   createdAt: string;
+  images?: string[]; 
 }
+

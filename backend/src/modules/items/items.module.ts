@@ -8,9 +8,10 @@ import { RedisModule } from 'src/common/redis/redis.module';
 import { ItemImagesModule } from '../item-images/item-images.module';
 import { StorageModule } from 'src/common/storage/storage.module';
 import { AuditModule } from '../audit/audit.module';
+import { ItemImage } from '../item-images/entities/item-image.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Item, User]),
+  imports: [TypeOrmModule.forFeature([Item, User, ItemImage]),
     RedisModule,
     StorageModule,
     ItemImagesModule,
