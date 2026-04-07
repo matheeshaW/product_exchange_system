@@ -1,4 +1,3 @@
-
 // USER
 export interface User {
   id: string;
@@ -6,6 +5,4 @@ export interface User {
   name: string | null;
   role: 'USER' | 'ADMIN';
 }
-
-
 
