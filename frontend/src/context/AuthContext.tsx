@@ -1,7 +1,7 @@
 import { createContext, useState, type ReactNode } from 'react';
-import api from '../api/axios';
-import type { ApiResponse } from '../types';
-import { setAxiosAccessToken } from '../api/axios';
+import api from '../common/api/axios.instance';
+import type { ApiResponse } from '../common/api/api.types';
+import { setAxiosAccessToken } from '../common/api/axios.instance';
 
 interface AuthContextType {
   accessToken: string | null;

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import api from '../api/axios';
-import type { Item, ApiResponse } from '../types';
-import ItemCard from '../components/ItemCard';
+import api from  '../../common/api/axios.instance';
+import type  { Item }  from './types/item.types';
+import type { ApiResponse } from '../../common/api/api.types';
+import ItemCard from './components/ItemCard';
 
-const Home = () => {
+const ItemsPage  = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -43,4 +44,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default ItemsPage ;

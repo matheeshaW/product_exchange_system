@@ -1,8 +1,3 @@
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
 
 // USER
 export interface User {
@@ -12,15 +7,5 @@ export interface User {
   role: 'USER' | 'ADMIN';
 }
 
-// ITEM
-export interface Item {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  condition: string;
-  ownerId: string;
-  createdAt: string;
-  images?: string[]; 
-}
+
 
