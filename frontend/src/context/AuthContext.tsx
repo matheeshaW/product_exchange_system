@@ -1,6 +1,7 @@
 import { createContext, useState, type ReactNode } from 'react';
 import api from '../api/axios';
 import type { ApiResponse } from '../types';
+import { setAxiosAccessToken } from '../api/axios';
 
 interface AuthContextType {
   accessToken: string | null;
@@ -21,7 +22,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const token = res.data.data.accessToken;
 
-      setAccessToken(token);
+      setAccessToken(token); // store in memory
+      setAxiosAccessToken(token); // (global axios access)
+      
     } catch (error) {
       throw new Error('Invalid credentials');
     }
