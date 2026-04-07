@@ -3,12 +3,15 @@ import { useParams } from 'react-router-dom';
 import api from '../../common/api/axios.instance';
 import type { Item } from './types/item.types';
 import type { ApiResponse } from '../../common/api/api.types';
+import SwapRequestModal from '../../modules/swaps/components/SwapRequestModal';
 
 const ItemDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
 
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDonationMode, setIsDonationMode] = useState(false);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -50,14 +53,32 @@ const ItemDetailsPage = () => {
 
       {/* ACTION BUTTONS */}
       <div className="flex gap-2">
-        <button className="bg-blue-500 text-white px-4 py-2 rounded">
+        <button
+          onClick={() => {
+            setIsDonationMode(false);
+            setIsModalOpen(true);
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
           Request Swap
         </button>
 
-        <button className="bg-green-500 text-white px-4 py-2 rounded">
+        <button
+          onClick={() => {
+            setIsDonationMode(true);
+            setIsModalOpen(true);
+          }}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
           Request Donation
         </button>
       </div>
+      <SwapRequestModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        requestedItemId={item.id}
+        defaultIsDonation={isDonationMode}
+      />
     </div>
   );
 };

@@ -56,6 +56,21 @@ export class SwapsService {
         );
       }
 
+      // offered item must belong to requester
+      if (dto.offeredItemId) {
+        const offeredItem = await this.itemRepository.findOne({
+          where: { id: dto.offeredItemId },
+        });
+
+        if (!offeredItem) {
+          throw new BadRequestException('Offered item not found');
+        }
+
+        if (offeredItem.ownerId !== userId) {
+          throw new BadRequestException('You can only offer your own item');
+        }
+      }
+
       // create swap
       const swap = this.swapRepository.create({
         requesterId: userId,
