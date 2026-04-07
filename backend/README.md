@@ -124,38 +124,372 @@ src/
 
 ---
 
-## API Endpoints
+## API Reference
 
-### Auth
+Base URL: `http://localhost:3000`
 
-* `POST /auth/register`
-* `POST /auth/login`
-* `POST /auth/refresh`
+Protected routes require:
 
-### Items
+```http
+Authorization: Bearer <access_token>
+```
 
-* `POST /items`
-* `GET /items?search=&category=&district=...`
+### 1) Auth APIs
 
-### Swaps
+#### POST /auth/register
 
-* `POST /swaps`
-* `PATCH /swaps/:id`
-* `GET /swaps/:id/contact`
+Request body:
 
-### Chat
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe",
+  "phone": "0712345678",
+  "province": "Western",
+  "district": "Colombo"
+}
+```
 
-* WebSocket namespace: `/swaps`
+Validation:
 
-* Events:
+- `email`: valid email, max 255
+- `password`: string, min 8, max 255
+- `name`: string, max 100
+- `phone`: string, max 20
+- `province`: string
+- `district`: string
 
-  * `join_swap`
-  * `send_message`
-  * `receive_message`
+Success response:
 
-* REST:
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "id": "a5f0b7d9-6a16-4d50-a807-3fb8dd34cb84",
+    "email": "user@example.com"
+  }
+}
+```
 
-  * `GET /chat/:swapId`
+#### POST /auth/login
+
+Request body:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+Validation:
+
+- `email`: valid email
+- `password`: string
+
+Success response (and sets HttpOnly `refreshToken` cookie):
+
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "<jwt_access_token>"
+  }
+}
+```
+
+#### POST /auth/refresh
+
+Request:
+
+- No JSON body required
+- Requires `refreshToken` cookie
+
+Success response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "<new_jwt_access_token>"
+  }
+}
+```
+
+Error response example:
+
+```json
+{
+  "success": false,
+  "message": "Invalid refresh token",
+  "data": null
+}
+```
+
+### 2) Items APIs (Protected)
+
+#### POST /items
+
+Content type: `multipart/form-data`
+
+Form fields:
+
+- `title` (string, required, max 150)
+- `description` (string, optional, max 500)
+- `category` (string, required, max 100)
+- `condition` (string, required, max 50)
+- `images` (file[], optional, max 5 files)
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Item created successfully",
+  "data": {
+    "id": "8c21563b-cf0b-4a89-9f64-8c8fe7195dd7",
+    "title": "iPhone 12",
+    "description": "Used but good condition",
+    "category": "Electronics",
+    "condition": "Good",
+    "ownerId": "f5c0e65b-4e7d-47a3-b325-b3813cb4571f",
+    "images": [
+      "https://res.cloudinary.com/.../img1.jpg",
+      "https://res.cloudinary.com/.../img2.jpg"
+    ]
+  }
+}
+```
+
+#### GET /items
+
+Query params (all optional):
+
+- `search` (title search, case-insensitive)
+- `category`
+- `condition`
+- `district`
+- `province`
+
+Example:
+
+```http
+GET /items?search=iphone&category=Electronics&district=Colombo
+```
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Items fetched from database",
+  "data": [
+    {
+      "id": "8c21563b-cf0b-4a89-9f64-8c8fe7195dd7",
+      "title": "iPhone 12",
+      "description": "Used but good condition",
+      "category": "Electronics",
+      "condition": "Good",
+      "ownerId": "f5c0e65b-4e7d-47a3-b325-b3813cb4571f",
+      "images": [
+        "https://res.cloudinary.com/.../img1.jpg"
+      ]
+    }
+  ]
+}
+```
+
+Note: Message may be `Items fetched from cache` when served from Redis.
+
+### 3) Swap APIs (Protected)
+
+#### POST /swaps
+
+Request body:
+
+```json
+{
+  "requestedItemId": "db57c6c8-4e81-4580-a4f6-9f8ac85f0f49",
+  "offeredItemId": "4959ee4e-a7cf-4f3f-82d7-22f0812f40f6",
+  "isDonation": false
+}
+```
+
+Rules:
+
+- If `isDonation = false`, `offeredItemId` is required
+- If `isDonation = true`, `offeredItemId` is ignored and stored as `null`
+- Cannot request own item
+- Cannot swap the same item ID with itself
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Request successful",
+  "data": {
+    "id": "acb0b7fd-3ab9-4974-8a3c-c34b40dda591",
+    "requesterId": "e3f5284a-4992-4329-8ad3-b95f33ef2d53",
+    "ownerId": "a562f74e-413b-4a13-b165-353e8f45e6be",
+    "requestedItemId": "db57c6c8-4e81-4580-a4f6-9f8ac85f0f49",
+    "offeredItemId": "4959ee4e-a7cf-4f3f-82d7-22f0812f40f6",
+    "status": "PENDING",
+    "isDonation": false,
+    "createdAt": "2026-04-07T10:00:00.000Z",
+    "updatedAt": "2026-04-07T10:00:00.000Z"
+  }
+}
+```
+
+#### PATCH /swaps/:id
+
+Path params:
+
+- `id` (swap ID)
+
+Request body:
+
+```json
+{
+  "status": "ACCEPTED"
+}
+```
+
+Allowed status values:
+
+- `PENDING`
+- `ACCEPTED`
+- `REJECTED`
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Request successful",
+  "data": {
+    "id": "acb0b7fd-3ab9-4974-8a3c-c34b40dda591",
+    "status": "ACCEPTED"
+  }
+}
+```
+
+#### GET /swaps/:id/contact
+
+Path params:
+
+- `id` (swap ID, UUID)
+
+Access rules:
+
+- Caller must be swap requester or owner
+- Swap must be `ACCEPTED`
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Contact details fetched successfully",
+  "data": {
+    "requester": {
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "0712345678"
+    },
+    "owner": {
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "phone": "0771234567"
+    }
+  }
+}
+```
+
+### 4) Chat APIs
+
+#### REST: GET /chat/:swapId (Protected)
+
+Path params:
+
+- `swapId`
+
+Query params:
+
+- `page` (optional, default: 1)
+- `limit` (optional, default: 20)
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Messages fetched successfully",
+  "data": [
+    {
+      "id": "a182f5c3-245f-4186-89de-7c82d991f0b4",
+      "swapId": "acb0b7fd-3ab9-4974-8a3c-c34b40dda591",
+      "senderId": "e3f5284a-4992-4329-8ad3-b95f33ef2d53",
+      "message": "Hi, is this still available?",
+      "createdAt": "2026-04-07T10:20:00.000Z"
+    }
+  ],
+  "meta": {
+    "total": 36,
+    "page": 1,
+    "limit": 20
+  }
+}
+```
+
+#### WebSocket: Namespace /swaps
+
+Connection auth:
+
+- Provide JWT access token in handshake auth:
+
+```json
+{
+  "token": "<jwt_access_token>"
+}
+```
+
+Events:
+
+- `join_swap`
+  - Payload:
+
+  ```json
+  {
+    "swapId": "acb0b7fd-3ab9-4974-8a3c-c34b40dda591"
+  }
+  ```
+
+- `send_message`
+  - Payload:
+
+  ```json
+  {
+    "swapId": "acb0b7fd-3ab9-4974-8a3c-c34b40dda591",
+    "message": "Hello"
+  }
+  ```
+
+- `receive_message` (server -> clients in room)
+  - Payload:
+
+  ```json
+  {
+    "id": "a182f5c3-245f-4186-89de-7c82d991f0b4",
+    "swapId": "acb0b7fd-3ab9-4974-8a3c-c34b40dda591",
+    "senderId": "e3f5284a-4992-4329-8ad3-b95f33ef2d53",
+    "message": "Hello",
+    "createdAt": "2026-04-07T10:25:00.000Z"
+  }
+  ```
 
 ---
 
