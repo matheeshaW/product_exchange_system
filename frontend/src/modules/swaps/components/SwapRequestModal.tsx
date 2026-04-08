@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import api, { getAxiosAccessToken } from '../../../common/api/axios.instance';
+import { useContext, useEffect, useState } from 'react';
+import api from '../../../common/api/axios.instance';
+import { AuthContext } from '../../../context/AuthContext';
 import type { Item } from '../../../modules/items/types/item.types';
 import type { ApiResponse } from '../../../common/api/api.types';
 
@@ -10,31 +11,13 @@ interface Props {
     defaultIsDonation?: boolean;
 }
 
-const getUserIdFromToken = () => {
-    const token = getAxiosAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    try {
-        const payloadPart = token.split('.')[1];
-        const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-        const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-        const payload = JSON.parse(atob(padded));
-
-        return payload.sub as string | undefined ?? null;
-    } catch {
-        return null;
-    }
-};
-
 const SwapRequestModal = ({
     isOpen,
     onClose,
     requestedItemId,
     defaultIsDonation = false,
 }: Props) => {
+    const auth = useContext(AuthContext);
     const [myItems, setMyItems] = useState<Item[]>([]);
     const [selectedItem, setSelectedItem] = useState<string>('');
     const [isDonation, setIsDonation] = useState(defaultIsDonation);
@@ -49,7 +32,7 @@ const SwapRequestModal = ({
             try {
                 const res = await api.get<ApiResponse<Item[]>>('/items');
 
-                const currentUserId = getUserIdFromToken();
+                const currentUserId = auth?.user?.id;
 
                 if (!currentUserId) {
                     setMyItems([]);
@@ -70,7 +53,7 @@ const SwapRequestModal = ({
         setError(null);
         setIsDonation(defaultIsDonation);
         fetchMyItems();
-    }, [isOpen, defaultIsDonation]);
+    }, [auth?.user?.id, defaultIsDonation, isOpen]);
 
     const handleSubmit = async () => {
         try {
@@ -84,7 +67,7 @@ const SwapRequestModal = ({
 
             await api.post('/swaps', {
                 requestedItemId,
-                offeredItemId: isDonation ? undefined : selectedItem,
+                offeredItemId: isDonation ? null : selectedItem,
                 isDonation,
             });
 
