@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../../../common/api/axios.instance';
 import type { Item } from '../../../modules/items/types/item.types';
 import type { ApiResponse } from '../../../common/api/api.types';
+import { createSwapRequest } from '../services/swaps.service';
 
 interface Props {
     isOpen: boolean;
@@ -52,7 +53,7 @@ const SwapRequestModal = ({
                 return;
             }
 
-            await api.post('/swaps', {
+            await createSwapRequest({
                 requestedItemId,
                 offeredItemId: isDonation ? null : selectedItem,
                 isDonation,

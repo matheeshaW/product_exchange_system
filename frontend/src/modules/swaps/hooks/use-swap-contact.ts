@@ -3,26 +3,33 @@ import { fetchSwapContact } from '../services/swaps.service';
 import type { SwapContact } from '../types/swap.types';
 
 export const useSwapContact = () => {
-  const [contact, setContact] = useState<SwapContact | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [contactsBySwapId, setContactsBySwapId] = useState<Record<string, SwapContact>>({});
+  const [loadingSwapId, setLoadingSwapId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadContact = useCallback(async (swapId: string) => {
+    if (contactsBySwapId[swapId]) {
+      return;
+    }
+
     try {
-      setLoading(true);
+      setLoadingSwapId(swapId);
       setError(null);
       const data = await fetchSwapContact(swapId);
-      setContact(data);
+      setContactsBySwapId((prev) => ({
+        ...prev,
+        [swapId]: data,
+      }));
     } catch {
       setError('Failed to fetch swap contact');
     } finally {
-      setLoading(false);
+      setLoadingSwapId(null);
     }
-  }, []);
+  }, [contactsBySwapId]);
 
   return {
-    contact,
-    loading,
+    contactsBySwapId,
+    loadingSwapId,
     error,
     loadContact,
   };

@@ -1,9 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import SwapCard from './components/SwapCard';
+import { useSwapContact } from './hooks/use-swap-contact';
 import { useSwaps } from './hooks/use-swaps';
 
 const SwapsPage = () => {
   const navigate = useNavigate();
+  const {
+    contactsBySwapId,
+    loadingSwapId,
+    error: contactError,
+    loadContact,
+  } = useSwapContact();
   const {
     loading,
     error,
@@ -19,6 +26,7 @@ const SwapsPage = () => {
       <h1 className="text-2xl font-bold mb-4">Swaps</h1>
 
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {contactError && <p className="mb-4 text-sm text-red-600">{contactError}</p>}
 
       <h2 className="text-xl font-semibold mt-4 mb-2">
         Incoming Requests
@@ -36,6 +44,9 @@ const SwapsPage = () => {
           onAccept={(id) => updateStatus(id, 'ACCEPTED')}
           onReject={(id) => updateStatus(id, 'REJECTED')}
           onOpenChat={(id) => navigate(`/chat/${id}`)}
+          onViewContact={loadContact}
+          contact={contactsBySwapId[swap.id] || null}
+          loadingContact={loadingSwapId === swap.id}
         />
       ))}
 
@@ -52,6 +63,9 @@ const SwapsPage = () => {
           key={swap.id}
           swap={swap}
           onOpenChat={(id) => navigate(`/chat/${id}`)}
+          onViewContact={loadContact}
+          contact={contactsBySwapId[swap.id] || null}
+          loadingContact={loadingSwapId === swap.id}
         />
       ))}
     </div>
