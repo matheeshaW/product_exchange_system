@@ -12,6 +12,14 @@ interface Swap {
   offeredItemId: string | null;
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
   isDonation: boolean;
+  requestedItem: {
+    id: string;
+    title: string;
+  } | null;
+  offeredItem: {
+    id: string;
+    title: string;
+  } | null;
 }
 
 const SwapsPage = () => {
@@ -84,6 +92,13 @@ const SwapsPage = () => {
         >
           <p>Status: {swap.status}</p>
           <p>Type: {swap.isDonation ? 'Donation' : 'Swap'}</p>
+          <p>Requested Item: {swap.requestedItem?.title || 'Item unavailable'}</p>
+          <p>
+            Offered Item:{' '}
+            {swap.isDonation
+              ? 'Donation (no return item)'
+              : (swap.offeredItem?.title || 'Item unavailable')}
+          </p>
 
           <button
             onClick={() => navigate(`/chat/${swap.id}`)}
@@ -127,6 +142,13 @@ const SwapsPage = () => {
         >
           <p>Status: {swap.status}</p>
           <p>Type: {swap.isDonation ? 'Donation' : 'Swap'}</p>
+          <p>Requested Item: {swap.requestedItem?.title || 'Item unavailable'}</p>
+          <p>
+            Offered Item:{' '}
+            {swap.isDonation
+              ? 'Donation (no return item)'
+              : (swap.offeredItem?.title || 'Item unavailable')}
+          </p>
 
           <button
             onClick={() => navigate(`/chat/${swap.id}`)}
