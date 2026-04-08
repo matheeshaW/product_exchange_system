@@ -132,6 +132,28 @@ export class SwapsService {
     }
   }
 
+  async getMySwaps(userId: string) {
+    try {
+      const swaps = await this.swapRepository.find({
+        where: [
+          { requesterId: userId },
+          { ownerId: userId },
+        ],
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Swaps fetched successfully',
+        data: swaps,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch swaps');
+    }
+  }
+
 
   async getSwapContacts(swapId: string, userId: string) {
     try {
