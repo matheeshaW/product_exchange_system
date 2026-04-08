@@ -48,6 +48,11 @@ export class ItemsController {
     });
   }
 
+  @Get('my')
+  getMyItems(@Request() req) {
+    return this.itemsService.getMyItems(req.user.userId);
+  }
+
   @Get(':id')
   getItemById(
     @Param('id', new ParseUUIDPipe()) id: string,

@@ -1,6 +1,5 @@
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../../common/api/axios.instance';
-import { AuthContext } from '../../../context/AuthContext';
 import type { Item } from '../../../modules/items/types/item.types';
 import type { ApiResponse } from '../../../common/api/api.types';
 
@@ -17,7 +16,6 @@ const SwapRequestModal = ({
     requestedItemId,
     defaultIsDonation = false,
 }: Props) => {
-    const auth = useContext(AuthContext);
     const [myItems, setMyItems] = useState<Item[]>([]);
     const [selectedItem, setSelectedItem] = useState<string>('');
     const [isDonation, setIsDonation] = useState(defaultIsDonation);
@@ -30,19 +28,8 @@ const SwapRequestModal = ({
 
         const fetchMyItems = async () => {
             try {
-                const res = await api.get<ApiResponse<Item[]>>('/items');
-
-                const currentUserId = auth?.user?.id;
-
-                if (!currentUserId) {
-                    setMyItems([]);
-                    setError('Unable to identify your account. Please log in again.');
-                    return;
-                }
-
-                setMyItems(
-                    res.data.data.filter((item) => item.ownerId === currentUserId)
-                );
+                const res = await api.get<ApiResponse<Item[]>>('/items/my');
+                setMyItems(res.data.data);
             } catch (err) {
                 console.error('Failed to fetch user items');
                 setError('Failed to load your items');
@@ -53,7 +40,7 @@ const SwapRequestModal = ({
         setError(null);
         setIsDonation(defaultIsDonation);
         fetchMyItems();
-    }, [auth?.user?.id, defaultIsDonation, isOpen]);
+    }, [defaultIsDonation, isOpen]);
 
     const handleSubmit = async () => {
         try {

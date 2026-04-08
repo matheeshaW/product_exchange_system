@@ -251,4 +251,56 @@ async getItemById(itemId: string) {
     throw new InternalServerErrorException('Failed to fetch item');
   }
 }
+
+async getMyItems(userId: string) {
+  try {
+    const cacheKey = `inventory:items:my:${userId}`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      return {
+        success: true,
+        message: 'Items fetched from cache',
+        data: JSON.parse(cached),
+      };
+    }
+
+    const items = await this.itemRepository.find({
+      where: { ownerId: userId, deletedAt: IsNull() },
+      order: { createdAt: 'DESC' },
+    });
+
+    const itemIds = items.map((item) => item.id);
+    let imagesMap: Record<string, string[]> = {};
+
+    if (itemIds.length > 0) {
+      const images = await this.itemImageRepository.find({
+        where: { itemId: In(itemIds) },
+      });
+
+      imagesMap = images.reduce((acc, img) => {
+        if (!acc[img.itemId]) {
+          acc[img.itemId] = [];
+        }
+        acc[img.itemId].push(img.imageUrl);
+        return acc;
+      }, {} as Record<string, string[]>);
+    }
+
+    const itemsWithImages = items.map((item) => ({
+      ...item,
+      images: imagesMap[item.id] || [],
+    }));
+
+    await this.redisService.set(cacheKey, JSON.stringify(itemsWithImages), 60);
+
+    return {
+      success: true,
+      message: 'Items fetched from database',
+      data: itemsWithImages,
+    };
+  } catch (error) {
+    throw new InternalServerErrorException('Failed to fetch user items');
+  }
+}
 }
