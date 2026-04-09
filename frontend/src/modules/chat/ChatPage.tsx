@@ -1,4 +1,6 @@
 import { useParams } from 'react-router-dom';
+import Spinner from '../../common/components/Spinner';
+import EmptyState from '../../common/components/EmptyState';
 import { useChatHistory } from './hooks/use-chat-history';
 import { useChatSocket } from './hooks/use-chat-socket';
 import ChatWindow from './components/ChatWindow';
@@ -6,14 +8,19 @@ import MessageInput from './components/MessageInput';
 
 const ChatPage = () => {
   const { swapId } = useParams<{ swapId: string }>();
+  const safeSwapId = swapId ?? '';
 
-  if (!swapId) return <div>Invalid swap</div>;
+  const { messages, setMessages, loading, error } = useChatHistory(safeSwapId);
 
-  const { messages, setMessages } = useChatHistory(swapId);
-
-  useChatSocket(swapId, (msg) => {
+  useChatSocket(safeSwapId, (msg) => {
     setMessages((prev) => [...prev, msg]);
   });
+
+  if (!swapId) return <div className="p-4">Invalid swap</div>;
+
+  if (loading) return <Spinner />;
+
+  if (error) return <EmptyState message={error} />;
 
   return (
     <div className="p-4 max-w-2xl mx-auto">

@@ -7,6 +7,10 @@ export const useChatSocket = (
   onMessage: (msg: Message) => void,
 ) => {
   useEffect(() => {
+    if (!swapId) {
+      return;
+    }
+
     const socket = getSocket();
 
     socket.connect();
