@@ -5,18 +5,35 @@ import type { Message } from '../types/chat.types';
 
 export const useChatHistory = (swapId: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetch = async () => {
-      const res = await api.get<ApiResponse<Message[]>>(
-        `/chat/${swapId}?page=1&limit=20`,
-      );
+    if (!swapId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
 
-      setMessages(res.data.data);
+    const fetch = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await api.get<ApiResponse<Message[]>>(
+          `/chat/${swapId}?page=1&limit=20`,
+        );
+
+        setMessages(res.data.data);
+      } catch {
+        setError('Failed to load chat history');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetch();
   }, [swapId]);
 
-  return { messages, setMessages };
+  return { messages, setMessages, loading, error };
 };

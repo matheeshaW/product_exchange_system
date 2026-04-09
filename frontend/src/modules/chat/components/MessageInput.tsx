@@ -32,7 +32,7 @@ const MessageInput = ({ swapId }: Props) => {
 
       <button
         onClick={sendMessage}
-        className="bg-blue-500 text-white px-4 rounded"
+        className="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded"
       >
         Send
       </button>
