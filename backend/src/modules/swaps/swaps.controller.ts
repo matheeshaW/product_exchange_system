@@ -19,6 +19,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class SwapsController {
   constructor(private readonly swapsService: SwapsService) { }
 
+  @Get()
+  getMySwaps(@Request() req) {
+    return this.swapsService.getMySwaps(req.user.userId);
+  }
+
   @Post()
   createSwap(@Body() dto: CreateSwapDto, @Request() req) {
     return this.swapsService.createSwap(dto, req.user.userId);

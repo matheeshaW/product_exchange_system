@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { Swap, SwapStatus } from './entities/swap.entity';
 import { CreateSwapDto } from './dto/create-swap.dto';
 import { UpdateSwapDto } from './dto/update-swap.dto';
@@ -54,6 +54,21 @@ export class SwapsService {
         throw new BadRequestException(
           'Offered item required for swap',
         );
+      }
+
+      // offered item must belong to requester
+      if (dto.offeredItemId) {
+        const offeredItem = await this.itemRepository.findOne({
+          where: { id: dto.offeredItemId },
+        });
+
+        if (!offeredItem) {
+          throw new BadRequestException('Offered item not found');
+        }
+
+        if (offeredItem.ownerId !== userId) {
+          throw new BadRequestException('You can only offer your own item');
+        }
       }
 
       // create swap
@@ -114,6 +129,61 @@ export class SwapsService {
         throw error;
 
       throw new InternalServerErrorException('Failed to update swap');
+    }
+  }
+
+  async getMySwaps(userId: string) {
+    try {
+      const swaps = await this.swapRepository.find({
+        where: [
+          { requesterId: userId },
+          { ownerId: userId },
+        ],
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+
+      const itemIds = swaps
+        .flatMap((swap) => [swap.requestedItemId, swap.offeredItemId])
+        .filter((id): id is string => Boolean(id));
+
+      const uniqueItemIds = [...new Set(itemIds)];
+
+      let itemMap: Record<string, Item> = {};
+
+      if (uniqueItemIds.length > 0) {
+        const items = await this.itemRepository.find({
+          where: {
+            id: In(uniqueItemIds),
+            deletedAt: IsNull(),
+          },
+        });
+
+        itemMap = items.reduce(
+          (acc, item) => {
+            acc[item.id] = item;
+            return acc;
+          },
+          {} as Record<string, Item>,
+        );
+      }
+
+      const enriched = swaps.map((swap) => ({
+        ...swap,
+        requestedItem: itemMap[swap.requestedItemId] || null,
+        offeredItem: swap.offeredItemId
+          ? (itemMap[swap.offeredItemId] || null)
+          : null,
+      }));
+
+      return {
+        success: true,
+        message: 'Swaps fetched successfully',
+        data: enriched,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch swaps');
     }
   }
 

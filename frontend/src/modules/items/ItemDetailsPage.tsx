@@ -1,0 +1,86 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import api from '../../common/api/axios.instance';
+import type { Item } from './types/item.types';
+import type { ApiResponse } from '../../common/api/api.types';
+import SwapRequestModal from '../../modules/swaps/components/SwapRequestModal';
+
+const ItemDetailsPage = () => {
+  const { id } = useParams<{ id: string }>();
+
+  const [item, setItem] = useState<Item | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDonationMode, setIsDonationMode] = useState(false);
+
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        const res = await api.get<ApiResponse<Item>>(`/items/${id}`);
+
+        setItem(res.data.data);
+      } catch (err) {
+        console.error('Failed to fetch item');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItem();
+  }, [id]);
+
+  if (loading) return <div className="p-4">Loading...</div>;
+
+  if (!item) return <div className="p-4">Item not found</div>;
+
+  return (
+    <div className="p-4 max-w-3xl mx-auto">
+      {/* IMAGE */}
+      <img
+        src={item.images?.[0] || 'https://placehold.co/400'}
+        alt={item.title}
+        className="w-full h-80 object-cover rounded mb-4"
+      />
+
+      {/* DETAILS */}
+      <h1 className="text-2xl font-bold mb-2">{item.title}</h1>
+
+      <p className="text-gray-600 mb-2">
+        {item.category} • {item.condition}
+      </p>
+
+      <p className="mb-4">{item.description}</p>
+
+      {/* ACTION BUTTONS */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            setIsDonationMode(false);
+            setIsModalOpen(true);
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Request Swap
+        </button>
+
+        <button
+          onClick={() => {
+            setIsDonationMode(true);
+            setIsModalOpen(true);
+          }}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Request Donation
+        </button>
+      </div>
+      <SwapRequestModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        requestedItemId={item.id}
+        defaultIsDonation={isDonationMode}
+      />
+    </div>
+  );
+};
+
+export default ItemDetailsPage;

@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -31,12 +31,14 @@ export class UsersService {
     phone: string,
     province: string,
     district: string,
+    role: UserRole = UserRole.USER,
   ): Promise<User> {
     try {
       const user = this.userRepository.create({
         email,
         password,
         name,
+        role,
         phone,
         province,
         district,

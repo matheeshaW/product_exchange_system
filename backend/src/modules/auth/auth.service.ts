@@ -71,6 +71,7 @@ export class AuthService {
       const payload = {
         sub: user.id,
         email: user.email,
+        role: user.role,
       };
 
       const accessToken = this.jwtService.sign(payload, {
@@ -101,6 +102,7 @@ export class AuthService {
       const payload = {
         sub: decoded.sub,
         email: decoded.email,
+        role: decoded.role,
       };
 
       const accessToken = this.jwtService.sign(payload, {
