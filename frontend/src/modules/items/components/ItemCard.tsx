@@ -6,30 +6,38 @@ interface Props {
 }
 
 const ItemCard = ({ item }: Props) => {
-
   const navigate = useNavigate();
-
 
   return (
     <div
       onClick={() => navigate(`/items/${item.id}`)}
-      className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-xl transition duration-200"
+      className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
     >
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        {/* IMAGE */}
+      <div className="relative">
         <img
           src={item.images?.[0] || 'https://placehold.co/400'}
           alt={item.title}
-          className="w-full h-48 object-cover"
+          className="h-52 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
         />
 
-        {/* CONTENT */}
-        <div className="p-3">
-          <h2 className="text-lg font-semibold">{item.title}</h2>
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
 
-          <p className="text-sm text-gray-600">
-            {item.category} • {item.condition}
-          </p>
+        <span className="absolute bottom-3 right-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-gray-800 backdrop-blur-sm">
+          {item.condition}
+        </span>
+      </div>
+
+      <div className="space-y-2 p-4">
+        <h2 className="truncate text-lg font-semibold text-gray-900">
+          {item.title}
+        </h2>
+
+        <p className="text-sm text-gray-500">
+          {item.category}
+        </p>
+
+        <div className="pt-1 text-sm font-medium text-blue-600 group-hover:text-blue-700">
+          View details
         </div>
       </div>
     </div>
