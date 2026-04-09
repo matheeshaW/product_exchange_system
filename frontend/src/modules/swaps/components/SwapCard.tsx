@@ -65,7 +65,7 @@ const SwapCard = ({
       <div className="mt-2 flex gap-2">
         <button
           onClick={() => onOpenChat(swap.id)}
-          className="bg-blue-500 text-white px-2 py-1 rounded"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
         >
           Open Chat
         </button>
@@ -74,14 +74,14 @@ const SwapCard = ({
           <>
             <button
               onClick={() => onAccept?.(swap.id)}
-              className="bg-green-500 text-white px-2 py-1 rounded"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
             >
               Accept
             </button>
 
             <button
               onClick={() => onReject?.(swap.id)}
-              className="bg-red-500 text-white px-2 py-1 rounded"
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
             >
               Reject
             </button>
@@ -91,7 +91,7 @@ const SwapCard = ({
         {swap.status === 'ACCEPTED' && (
           <button
             onClick={() => onViewContact?.(swap.id)}
-            className="bg-gray-700 text-white px-2 py-1 rounded"
+            className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded"
           >
             {loadingContact ? 'Loading Contacts...' : 'View Contacts'}
           </button>

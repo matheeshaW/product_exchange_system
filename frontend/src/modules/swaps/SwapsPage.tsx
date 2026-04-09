@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import EmptyState from '../../common/components/EmptyState';
+import Spinner from '../../common/components/Spinner';
 import SwapCard from './components/SwapCard';
 import { useSwapContact } from './hooks/use-swap-contact';
 import { useSwaps } from './hooks/use-swaps';
@@ -19,7 +21,7 @@ const SwapsPage = () => {
     updateStatus,
   } = useSwaps();
 
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (loading) return <Spinner />;
 
   return (
     <div className="p-4">
@@ -33,7 +35,7 @@ const SwapsPage = () => {
       </h2>
 
       {incoming.length === 0 && (
-        <p className="text-sm text-gray-500 mb-4">No incoming requests.</p>
+        <EmptyState message="No incoming requests" />
       )}
 
       {incoming.map((swap) => (
@@ -55,7 +57,7 @@ const SwapsPage = () => {
       </h2>
 
       {outgoing.length === 0 && (
-        <p className="text-sm text-gray-500 mb-4">No outgoing requests.</p>
+        <EmptyState message="No outgoing requests" />
       )}
 
       {outgoing.map((swap) => (
