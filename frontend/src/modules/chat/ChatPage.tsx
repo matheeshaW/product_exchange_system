@@ -1,15 +1,27 @@
 import { useParams } from 'react-router-dom';
+import { useChatHistory } from './hooks/use-chat-history';
+import { useChatSocket } from './hooks/use-chat-socket';
+import ChatWindow from './components/ChatWindow';
+import MessageInput from './components/MessageInput';
 
 const ChatPage = () => {
   const { swapId } = useParams<{ swapId: string }>();
 
+  if (!swapId) return <div>Invalid swap</div>;
+
+  const { messages, setMessages } = useChatHistory(swapId);
+
+  useChatSocket(swapId, (msg) => {
+    setMessages((prev) => [...prev, msg]);
+  });
+
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-2">Chat</h1>
-      <p className="text-gray-600">Swap ID: {swapId}</p>
-      <p className="mt-4 text-sm text-gray-500">
-        Chat UI can be added here next.
-      </p>
+    <div className="p-4 max-w-2xl mx-auto">
+      <h1 className="text-xl font-bold mb-2">Chat</h1>
+
+      <ChatWindow messages={messages} />
+
+      <MessageInput swapId={swapId} />
     </div>
   );
 };
