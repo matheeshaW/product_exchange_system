@@ -13,7 +13,7 @@ const ItemCard = ({ item }: Props) => {
   return (
     <div
       onClick={() => navigate(`/items/${item.id}`)}
-      className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
+      className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-xl transition duration-200"
     >
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         {/* IMAGE */}
