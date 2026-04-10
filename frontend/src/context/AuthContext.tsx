@@ -14,6 +14,14 @@ interface AuthUser {
 interface AuthContextType {
   accessToken: string | null;
   user: AuthUser | null;
+  register: (payload: {
+    email: string;
+    password: string;
+    name: string;
+    phone: string;
+    province: string;
+    district: string;
+  }) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -76,12 +84,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const register = async (payload: {
+    email: string;
+    password: string;
+    name: string;
+    phone: string;
+    province: string;
+    district: string;
+  }) => {
+    try {
+      await api.post('/auth/register', payload);
+    } catch {
+      throw new Error('Registration failed');
+    }
+  };
+
   const logout = () => {
     applyAccessToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ accessToken, user, login, logout }}>
+    <AuthContext.Provider value={{ accessToken, user, register, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

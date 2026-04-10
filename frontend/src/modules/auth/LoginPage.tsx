@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
 const LoginPage = () => {
@@ -80,6 +80,13 @@ const LoginPage = () => {
                 >
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
+
+                <p className="text-sm text-gray-600 text-center mt-4">
+                    Don&apos;t have an account?{' '}
+                    <Link to="/register" className="text-blue-600 hover:underline">
+                        Register
+                    </Link>
+                </p>
             </form>
         </div>
     );
