@@ -14,6 +14,7 @@ interface AuthUser {
 interface AuthContextType {
   accessToken: string | null;
   user: AuthUser | null;
+  isAuthLoading: boolean;
   register: (payload: {
     email: string;
     password: string;
@@ -43,6 +44,7 @@ const decodeUserFromToken = (token: string): AuthUser => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const applyAccessToken = (token: string | null) => {
     setAccessToken(token);
@@ -66,6 +68,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return unregister;
+  }, []);
+
+  // Rehydrate auth state on page refresh using HttpOnly refresh cookie.
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const res = await api.post<ApiResponse<{ accessToken: string }>>(
+          '/auth/refresh',
+        );
+
+        applyAccessToken(res.data.data.accessToken);
+      } catch {
+        applyAccessToken(null);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -104,7 +125,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ accessToken, user, register, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        accessToken,
+        user,
+        isAuthLoading,
+        register,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
