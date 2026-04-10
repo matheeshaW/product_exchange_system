@@ -113,14 +113,16 @@ src/
 
 ## Authentication Flow
 
-1. User logs in → receives:
+1. User logs in
 
-   * Access Token (short-lived)
-   * Refresh Token (HttpOnly cookie)
+  * Refresh Token is set in HttpOnly cookie
+  * Access Token is returned in `Authorization` response header
 
-2. Access Token used for API requests
+2. Frontend keeps Access Token in memory only
 
-3. Refresh endpoint issues new access token
+3. Access Token is sent as `Bearer` token for protected APIs
+
+4. Refresh endpoint rotates Access Token using refresh cookie
 
 ---
 
@@ -189,14 +191,22 @@ Validation:
 - `email`: valid email
 - `password`: string
 
-Success response (and sets HttpOnly `refreshToken` cookie):
+Success behavior:
+
+- Sets HttpOnly `refreshToken` cookie
+- Returns access token in response header:
+
+```http
+Authorization: Bearer <jwt_access_token>
+```
+
+Success response body:
 
 ```json
 {
   "success": true,
-  "data": {
-    "accessToken": "<jwt_access_token>"
-  }
+  "message": "Login successful",
+  "data": null
 }
 ```
 
@@ -207,14 +217,22 @@ Request:
 - No JSON body required
 - Requires `refreshToken` cookie
 
-Success response:
+Success behavior:
+
+- Requires `refreshToken` cookie
+- Returns refreshed access token in response header:
+
+```http
+Authorization: Bearer <new_jwt_access_token>
+```
+
+Success response body:
 
 ```json
 {
   "success": true,
-  "data": {
-    "accessToken": "<new_jwt_access_token>"
-  }
+  "message": "Token refreshed successfully",
+  "data": null
 }
 ```
 
@@ -228,7 +246,84 @@ Error response example:
 }
 ```
 
-### 2) Items APIs (Protected)
+### 2) Users APIs (Protected)
+
+#### GET /users/me
+
+Returns current authenticated user profile.
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Profile fetched successfully",
+  "data": {
+    "id": "a5f0b7d9-6a16-4d50-a807-3fb8dd34cb84",
+    "email": "user@example.com",
+    "role": "USER",
+    "name": "John Doe",
+    "phone": "0712345678",
+    "province": "Western",
+    "district": "Colombo",
+    "createdAt": "2026-04-10T10:00:00.000Z"
+  }
+}
+```
+
+#### PATCH /users/me
+
+Updates profile fields.
+
+Request body (all optional):
+
+```json
+{
+  "name": "John Doe",
+  "phone": "0711111111",
+  "province": "Western",
+  "district": "Colombo"
+}
+```
+
+#### PATCH /users/me/password
+
+Changes account password.
+
+Request body:
+
+```json
+{
+  "currentPassword": "password123",
+  "newPassword": "newPassword123"
+}
+```
+
+#### DELETE /users/me
+
+Soft-deletes the account.
+
+Request body:
+
+```json
+{
+  "password": "password123"
+}
+```
+
+### 3) Items APIs
+
+Public endpoints:
+
+- `GET /items`
+- `GET /items/:id`
+
+Protected endpoints:
+
+- `POST /items`
+- `GET /items/my`
+- `PATCH /items/:id`
+- `DELETE /items/:id`
 
 #### POST /items
 
@@ -303,7 +398,54 @@ Success response:
 
 Note: Message may be `Items fetched from cache` when served from Redis.
 
-### 3) Swap APIs (Protected)
+#### GET /items/:id
+
+Fetches a single available item (with images).
+
+#### GET /items/my (Protected)
+
+Returns authenticated user's items.
+
+Query params:
+
+- `includeSwapped` (optional, default: `false`)
+
+Example:
+
+```http
+GET /items/my?includeSwapped=true
+```
+
+#### PATCH /items/:id (Protected)
+
+Updates item metadata and images.
+
+Content type: `multipart/form-data`
+
+Form fields (all optional):
+
+- `title` (string)
+- `description` (string)
+- `category` (string)
+- `condition` (string)
+- `keepImageUrls` (stringified array or repeated values)
+- `images` (new file[], max total 5)
+
+Example:
+
+```http
+PATCH /items/8c21563b-cf0b-4a89-9f64-8c8fe7195dd7
+```
+
+#### DELETE /items/:id (Protected)
+
+Soft-deletes an item owned by the authenticated user.
+
+### 4) Swap APIs (Protected)
+
+#### GET /swaps
+
+Returns all swaps where current user is requester or owner.
 
 #### POST /swaps
 
@@ -409,7 +551,7 @@ Success response:
 }
 ```
 
-### 4) Chat APIs
+### 5) Chat APIs
 
 #### REST: GET /chat/:swapId (Protected)
 
