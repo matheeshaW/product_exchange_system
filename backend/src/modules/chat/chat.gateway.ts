@@ -42,9 +42,13 @@ export class ChatGateway {
         process.env.JWT_SECRET as string,
       );
 
+      if (!decoded?.sub) {
+        client.disconnect();
+        return;
+      }
+
       client.data.user = {
-        userId: decoded.sub,
-        email: decoded.email,
+        userId: String(decoded.sub),
       };
     } catch (error) {
       client.disconnect();
@@ -58,7 +62,7 @@ export class ChatGateway {
   ) {
     const user = client.data.user;
 
-    if (!user) {
+    if (!user || !user.userId) {
       client.disconnect();
       return;
     }
@@ -95,7 +99,7 @@ export class ChatGateway {
   ) {
     const user = client.data.user;
 
-    if (!user) {
+    if (!user || !user.userId) {
       client.disconnect();
       return;
     }

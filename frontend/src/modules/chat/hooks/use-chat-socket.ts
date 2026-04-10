@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { getSocket } from '../socket/socket.client';
 import type { Message } from '../types/chat.types';
+import { getAxiosAccessToken } from '../../../common/api/axios.instance';
 
 export const useChatSocket = (
   swapId: string,
@@ -12,6 +13,10 @@ export const useChatSocket = (
     }
 
     const socket = getSocket();
+
+    socket.auth = {
+      token: getAxiosAccessToken(),
+    };
 
     socket.connect();
 
