@@ -1,30 +1,11 @@
 import { useState, useCallback } from 'react';
-import type { ItemFormData, ItemCondition, ItemCategory } from '../types/create-item.types';
+import { ITEM_CATEGORIES, ITEM_CONDITIONS } from '../../../utils/constants';
+import type { ItemFormData } from '../types/create-item.types';
 
 interface ItemFormProps {
   onSubmit: (formData: ItemFormData, images: File[]) => Promise<void>;
   loading: boolean;
 }
-
-const ITEM_CONDITIONS: ItemCondition[] = [
-  { value: 'NEW', label: 'New' },
-  { value: 'LIKE_NEW', label: 'Like New' },
-  { value: 'GOOD', label: 'Good' },
-  { value: 'FAIR', label: 'Fair' },
-  { value: 'USED', label: 'Used' },
-];
-
-const ITEM_CATEGORIES: ItemCategory[] = [
-  { value: 'ELECTRONICS', label: 'Electronics' },
-  { value: 'FURNITURE', label: 'Furniture' },
-  { value: 'CLOTHING', label: 'Clothing' },
-  { value: 'BOOKS', label: 'Books' },
-  { value: 'SPORTS', label: 'Sports & Outdoors' },
-  { value: 'KITCHEN', label: 'Kitchen & Dining' },
-  { value: 'HOME_DECOR', label: 'Home & Decor' },
-  { value: 'TOYS', label: 'Toys & Games' },
-  { value: 'OTHER', label: 'Other' },
-];
 
 const ItemForm = ({ onSubmit, loading }: ItemFormProps) => {
   const [formData, setFormData] = useState<ItemFormData>({

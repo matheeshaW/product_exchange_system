@@ -3,6 +3,10 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { getApiErrorMessage } from '../../common/api/error-message';
+import {
+  SRI_LANKAN_DISTRICTS_BY_PROVINCE,
+  SRI_LANKAN_PROVINCES,
+} from '../../utils/constants';
 
 const RegisterPage = () => {
   const auth = useContext(AuthContext);
@@ -18,6 +22,10 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const districtOptions = province
+    ? SRI_LANKAN_DISTRICTS_BY_PROVINCE[province] || []
+    : [];
 
   if (!auth) {
     throw new Error('AuthContext not available');
@@ -106,23 +114,37 @@ const RegisterPage = () => {
           className="w-full mb-3 p-2 border rounded"
         />
 
-        <input
-          type="text"
-          placeholder="Province"
+        <select
           value={province}
-          onChange={(e) => setProvince(e.target.value)}
+          onChange={(e) => {
+            setProvince(e.target.value);
+            setDistrict('');
+          }}
           required
           className="w-full mb-3 p-2 border rounded"
-        />
+        >
+          <option value="">Select province</option>
+          {SRI_LANKAN_PROVINCES.map((provinceOption) => (
+            <option key={provinceOption.value} value={provinceOption.value}>
+              {provinceOption.label}
+            </option>
+          ))}
+        </select>
 
-        <input
-          type="text"
-          placeholder="District"
+        <select
           value={district}
           onChange={(e) => setDistrict(e.target.value)}
           required
+          disabled={!province}
           className="w-full mb-4 p-2 border rounded"
-        />
+        >
+          <option value="">Select district</option>
+          {districtOptions.map((districtOption) => (
+            <option key={districtOption.value} value={districtOption.value}>
+              {districtOption.label}
+            </option>
+          ))}
+        </select>
 
         <button
           type="submit"
