@@ -19,6 +19,10 @@ const Navbar = () => {
         <Link to="/">Items</Link>
         <Link to="/swaps">Swaps</Link>
 
+        {auth?.accessToken && (
+          <Link to="/profile">Profile</Link>
+        )}
+
         {!auth?.accessToken && (
           <button
             onClick={() => navigate('/login')}

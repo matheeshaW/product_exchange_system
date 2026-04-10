@@ -5,6 +5,7 @@ import ItemsPage from '../modules/items/ItemsPage';
 import ItemDetailsPage from '../modules/items/ItemDetailsPage';
 import SwapsPage from '../modules/swaps/SwapsPage';
 import ChatPage from '../modules/chat/ChatPage';
+import ProfilePage from '../modules/users/ProfilePage';
 import AuthGuard from '../common/guards/AuthGuard';
 
 const Router = () => {
@@ -27,6 +28,14 @@ const Router = () => {
         element={
           <AuthGuard>
             <ChatPage />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <AuthGuard>
+            <ProfilePage />
           </AuthGuard>
         }
       />
