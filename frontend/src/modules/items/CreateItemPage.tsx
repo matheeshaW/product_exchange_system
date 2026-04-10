@@ -19,15 +19,16 @@ const CreateItemPage = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Item</h1>
-        <p className="text-gray-600">List an item you'd like to swap with others</p>
-      </div>
+    <div className="mx-auto max-w-6xl space-y-6 py-4">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Listing</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">Create New Item</h1>
+        <p className="mt-1 text-sm text-slate-600">Add clear details and good photos to improve your chances of a quick match.</p>
+      </section>
 
       {/* Success Message */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg
@@ -53,7 +54,7 @@ const CreateItemPage = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg
@@ -77,9 +78,23 @@ const CreateItemPage = () => {
         </div>
       )}
 
-      {/* Form */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <ItemForm onSubmit={handleFormSubmit} loading={loading} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <ItemForm onSubmit={handleFormSubmit} loading={loading} />
+        </div>
+
+        <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">Tips for Better Results</h2>
+          <ul className="mt-3 space-y-2 text-sm text-slate-600">
+            <li>- Use clear, bright images from multiple angles.</li>
+            <li>- Write a concise title with key item details.</li>
+            <li>- Mention any wear or defects in description.</li>
+            <li>- Pick accurate condition to reduce disputes.</li>
+          </ul>
+          <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-500">
+            Listings with complete details usually receive faster swap responses.
+          </div>
+        </aside>
       </div>
     </div>
   );

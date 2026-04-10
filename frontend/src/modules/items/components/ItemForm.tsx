@@ -107,7 +107,7 @@ const ItemForm = ({ onSubmit, loading }: ItemFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Title */}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="title" className="mb-1 block text-sm font-medium text-slate-700">
           Title *
         </label>
         <input
@@ -119,17 +119,17 @@ const ItemForm = ({ onSubmit, loading }: ItemFormProps) => {
           disabled={loading}
           placeholder="e.g., Vintage Coffee Table"
           maxLength={150}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="mt-1 text-xs text-slate-500">
           {formData.title.length}/150 characters
         </p>
-        {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title}</p>}
+        {errors.title && <p className="mt-1 text-sm text-rose-600">{errors.title}</p>}
       </div>
 
       {/* Description */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="description" className="mb-1 block text-sm font-medium text-slate-700">
           Description
         </label>
         <textarea
@@ -141,63 +141,65 @@ const ItemForm = ({ onSubmit, loading }: ItemFormProps) => {
           placeholder="Describe your item's condition, features, and any notable details..."
           maxLength={500}
           rows={4}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+          className="w-full resize-none rounded-lg border border-slate-300 px-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="mt-1 text-xs text-slate-500">
           {formData.description.length}/500 characters
         </p>
-        {errors.description && <p className="text-sm text-red-600 mt-1">{errors.description}</p>}
+        {errors.description && <p className="mt-1 text-sm text-rose-600">{errors.description}</p>}
       </div>
 
-      {/* Category */}
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-          Category *
-        </label>
-        <select
-          id="category"
-          name="category"
-          value={formData.category}
-          onChange={handleInputChange}
-          disabled={loading}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-        >
-          <option value="">Select a category</option>
-          {ITEM_CATEGORIES.map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
-        {errors.category && <p className="text-sm text-red-600 mt-1">{errors.category}</p>}
-      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Category */}
+        <div>
+          <label htmlFor="category" className="mb-1 block text-sm font-medium text-slate-700">
+            Category *
+          </label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleInputChange}
+            disabled={loading}
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-800 focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+          >
+            <option value="">Select a category</option>
+            {ITEM_CATEGORIES.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
+          {errors.category && <p className="mt-1 text-sm text-rose-600">{errors.category}</p>}
+        </div>
 
-      {/* Condition */}
-      <div>
-        <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
-          Condition *
-        </label>
-        <select
-          id="condition"
-          name="condition"
-          value={formData.condition}
-          onChange={handleInputChange}
-          disabled={loading}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-        >
-          <option value="">Select condition</option>
-          {ITEM_CONDITIONS.map((cond) => (
-            <option key={cond.value} value={cond.value}>
-              {cond.label}
-            </option>
-          ))}
-        </select>
-        {errors.condition && <p className="text-sm text-red-600 mt-1">{errors.condition}</p>}
+        {/* Condition */}
+        <div>
+          <label htmlFor="condition" className="mb-1 block text-sm font-medium text-slate-700">
+            Condition *
+          </label>
+          <select
+            id="condition"
+            name="condition"
+            value={formData.condition}
+            onChange={handleInputChange}
+            disabled={loading}
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-800 focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-100"
+          >
+            <option value="">Select condition</option>
+            {ITEM_CONDITIONS.map((cond) => (
+              <option key={cond.value} value={cond.value}>
+                {cond.label}
+              </option>
+            ))}
+          </select>
+          {errors.condition && <p className="mt-1 text-sm text-rose-600">{errors.condition}</p>}
+        </div>
       </div>
 
       {/* Images */}
-      <div>
-        <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <label htmlFor="images" className="mb-1 block text-sm font-medium text-slate-700">
           Images * (Max 5)
         </label>
         <input
@@ -207,18 +209,18 @@ const ItemForm = ({ onSubmit, loading }: ItemFormProps) => {
           multiple
           onChange={handleImageSelect}
           disabled={loading || images.length >= 5}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-800 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-sm file:text-white hover:file:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-100"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="mt-1 text-xs text-slate-500">
           {images.length}/5 images selected
         </p>
-        {errors.images && <p className="text-sm text-red-600 mt-1">{errors.images}</p>}
+        {errors.images && <p className="mt-1 text-sm text-rose-600">{errors.images}</p>}
       </div>
 
       {/* Image Previews */}
       {previewUrls.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Image Preview</h3>
+          <h3 className="mb-2 text-sm font-medium text-slate-700">Image Preview</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {previewUrls.map((url, index) => (
               <div key={url} className="relative group">
@@ -231,7 +233,7 @@ const ItemForm = ({ onSubmit, loading }: ItemFormProps) => {
                   type="button"
                   onClick={() => handleRemoveImage(index)}
                   disabled={loading}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity disabled:cursor-not-allowed"
+                      className="absolute top-1 right-1 rounded-full bg-rose-600 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
                   aria-label={`Remove image ${index + 1}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,7 +255,7 @@ const ItemForm = ({ onSubmit, loading }: ItemFormProps) => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+        className="w-full rounded-lg bg-slate-900 px-6 py-3 font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
         {loading ? 'Creating Item...' : 'Create Item'}
       </button>

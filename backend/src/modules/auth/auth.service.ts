@@ -62,11 +62,8 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      const tenantId = process.env.DEFAULT_TENANT_ID || 'default';
-
       const payload = {
         sub: user.id,
-        tenant_id: tenantId,
         role: user.role,
       };
 
@@ -97,7 +94,6 @@ export class AuthService {
 
       const payload = {
         sub: decoded.sub,
-        tenant_id: decoded.tenant_id,
         role: decoded.role,
       };
 

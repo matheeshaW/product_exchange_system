@@ -21,11 +21,11 @@ const Sidebar = () => {
           <NavLink to="/" className={navLinkClass} end>
             Browse Items
           </NavLink>
-          <NavLink to="/swaps" className={navLinkClass}>
-            Swaps
-          </NavLink>
           {isLoggedIn && (
             <>
+              <NavLink to="/swaps" className={navLinkClass}>
+                Swaps
+              </NavLink>
               <NavLink to="/items/create" className={navLinkClass}>
                 Create Item
               </NavLink>
@@ -55,11 +55,11 @@ const Sidebar = () => {
           <NavLink to="/" className={navLinkClass} end>
             Browse Items
           </NavLink>
-          <NavLink to="/swaps" className={navLinkClass}>
-            Swaps
-          </NavLink>
           {isLoggedIn && (
             <>
+              <NavLink to="/swaps" className={navLinkClass}>
+                Swaps
+              </NavLink>
               <NavLink to="/items/create" className={navLinkClass}>
                 Create Item
               </NavLink>

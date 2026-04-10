@@ -45,8 +45,8 @@ const ProfilePage = () => {
 
   if (!profile) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-red-100 text-red-700 p-3 rounded">
+      <div className="mx-auto max-w-5xl">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-700">
           {error || 'Profile data unavailable'}
         </div>
       </div>
@@ -54,50 +54,60 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">My Profile</h1>
-
-      {error && (
-        <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>
-      )}
-
-      <ProfileInfoCard
-        profile={profile}
-        onSave={saveProfile}
-      />
-
-      <section className="bg-white border rounded-xl p-4 shadow-sm space-y-3">
-        <h2 className="text-lg font-semibold">Security</h2>
-        <p className="text-sm text-gray-600">
-          Manage your password and account status.
+    <div className="mx-auto max-w-6xl space-y-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Account</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">My Profile</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Manage your personal details, security settings, and item listings in one place.
         </p>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setIsPasswordModalOpen(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Change Password
-          </button>
-
-          <button
-            onClick={() => setIsDeleteModalOpen(true)}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-          >
-            Delete Account
-          </button>
-        </div>
       </section>
 
-      <MyItemsSection
-        items={items}
-        loading={itemsLoading}
-        error={itemsError}
-        savingId={savingId}
-        deletingId={deletingId}
-        onSave={saveItem}
-        onDelete={removeItem}
-      />
+      {error && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="space-y-6">
+          <ProfileInfoCard
+            profile={profile}
+            onSave={saveProfile}
+          />
+
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">Security</h2>
+            <p className="text-sm text-slate-600">
+              Manage your password and account status.
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-800"
+              >
+                Change Password
+              </button>
+
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-white transition hover:bg-rose-700"
+              >
+                Delete Account
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <MyItemsSection
+          items={items}
+          loading={itemsLoading}
+          error={itemsError}
+          savingId={savingId}
+          deletingId={deletingId}
+          onSave={saveItem}
+          onDelete={removeItem}
+        />
+      </div>
 
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
