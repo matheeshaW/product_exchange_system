@@ -55,6 +55,57 @@ export class UsersService {
     }
   }
 
+  async registerOrRestoreUser(
+    email: string,
+    hashedPassword: string,
+    name: string,
+    phone: string,
+    province: string,
+    district: string,
+  ): Promise<User> {
+    try {
+      // Check if user exists (including soft-deleted)
+      const existingUser = await this.userRepository.findOne({
+        where: { email },
+        withDeleted: true,
+      });
+
+      if (existingUser && !existingUser.deletedAt) {
+        // Active user with this email already exists
+        throw new BadRequestException('Email already in use');
+      }
+
+      if (existingUser && existingUser.deletedAt) {
+        // Restore soft-deleted user
+        existingUser.password = hashedPassword;
+        existingUser.name = name;
+        existingUser.phone = phone;
+        existingUser.province = province;
+        existingUser.district = district;
+        existingUser.deletedAt = null;
+
+        return await this.userRepository.save(existingUser);
+      }
+
+      // Create new user
+      const user = this.userRepository.create({
+        email,
+        password: hashedPassword,
+        name,
+        role: UserRole.USER,
+        phone,
+        province,
+        district,
+      });
+
+      return await this.userRepository.save(user);
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+
+      throw new InternalServerErrorException('Failed to register user');
+    }
+  }
+
   async getProfile(userId: string) {
     try {
       const user = await this.userRepository.findOne({
