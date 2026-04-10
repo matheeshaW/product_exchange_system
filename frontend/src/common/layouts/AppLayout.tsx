@@ -5,7 +5,7 @@ import Sidebar from '../components/Sidebar';
 const AppLayout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto flex w-full max-w-[1440px] gap-4 p-3 sm:p-4">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 p-3 sm:p-4 lg:flex-row">
         <Sidebar />
 
         <div className="min-w-0 flex-1">

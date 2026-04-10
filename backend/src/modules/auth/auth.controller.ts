@@ -18,21 +18,30 @@ export class AuthController {
 
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
-      secure: false, // true in production
+      secure: process.env.NODE_ENV !== 'development',
       sameSite: 'strict',
     });
 
+    res.setHeader('Authorization', `Bearer ${result.accessToken}`);
+
     return res.json({
       success: true,
-      data: {
-        accessToken: result.accessToken,
-      },
+      message: 'Login successful',
+      data: null,
     });
   }
 
 
   @Post('refresh')
-  refresh(@Req() req) {
-    return this.authService.refresh(req.cookies.refreshToken);
+  async refresh(@Req() req, @Res() res) {
+    const result = await this.authService.refresh(req.cookies.refreshToken);
+
+    res.setHeader('Authorization', `Bearer ${result.data.accessToken}`);
+
+    return res.json({
+      success: true,
+      message: 'Token refreshed successfully',
+      data: null,
+    });
   }
 }

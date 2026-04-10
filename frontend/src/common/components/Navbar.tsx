@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
 const Navbar = () => {
@@ -8,13 +8,6 @@ const Navbar = () => {
   const isLoggedIn = Boolean(auth?.accessToken);
 
   const displayName = auth?.user?.name || auth?.user?.email?.split('@')[0] || 'Guest';
-
-  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-      isActive
-        ? 'bg-slate-900 text-white'
-        : 'text-slate-700 hover:bg-slate-100'
-    }`;
 
   const handleLogout = () => {
     auth?.logout();
@@ -36,25 +29,6 @@ const Navbar = () => {
             <p className="text-xs text-slate-500">Trade smarter, waste less</p>
           </span>
         </button>
-
-        <div className="hidden items-center gap-1 md:flex">
-          <NavLink to="/" className={navLinkClass} end>
-            Items
-          </NavLink>
-          <NavLink to="/swaps" className={navLinkClass}>
-            Swaps
-          </NavLink>
-          {isLoggedIn && (
-            <>
-              <NavLink to="/items/create" className={navLinkClass}>
-                Create Item
-              </NavLink>
-              <NavLink to="/profile" className={navLinkClass}>
-                Profile
-              </NavLink>
-            </>
-          )}
-        </div>
 
         <div className="flex items-center gap-2">
           {isLoggedIn && (

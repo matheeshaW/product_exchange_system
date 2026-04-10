@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { getAccessTokenFromAuthHeader } from './access-token';
 
 let accessToken: string | null = null;
 let onTokenRefreshed: ((token: string | null) => void) | null = null;
@@ -68,7 +69,13 @@ api.interceptors.response.use(
       try {
         const res = await api.post('/auth/refresh');
 
-        const newToken = (res.data as any).data.accessToken;
+        const newToken = getAccessTokenFromAuthHeader(
+          (res.headers as Record<string, string>)?.authorization,
+        );
+
+        if (!newToken) {
+          throw new Error('Access token missing in refresh response');
+        }
 
         setAxiosAccessToken(newToken);
         onTokenRefreshed?.(newToken);
