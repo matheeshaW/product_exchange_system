@@ -7,6 +7,11 @@ import {
   DeleteDateColumn,
 } from 'typeorm';
 
+export enum ItemStatus {
+  AVAILABLE = 'AVAILABLE',
+  SWAPPED = 'SWAPPED',
+}
+
 @Entity('items')
 export class Item {
   @PrimaryGeneratedColumn('uuid')
@@ -26,6 +31,13 @@ export class Item {
 
   @Column({ name: 'owner_id' })
   ownerId!: string;
+
+  @Column({
+    type: 'enum',
+    enum: ItemStatus,
+    default: ItemStatus.AVAILABLE,
+  })
+  status!: ItemStatus;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

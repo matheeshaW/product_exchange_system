@@ -1,7 +1,8 @@
 import { useState, useContext } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { getApiErrorMessage } from '../../common/api/error-message';
 
 const LoginPage = () => {
     const auth = useContext(AuthContext);
@@ -31,7 +32,7 @@ const LoginPage = () => {
             // redirect after login
             navigate('/');
         } catch (err) {
-            setError('Invalid email or password');
+            setError(getApiErrorMessage(err, 'Invalid email or password'));
         } finally {
             setLoading(false);
         }
@@ -80,6 +81,13 @@ const LoginPage = () => {
                 >
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
+
+                <p className="text-sm text-gray-600 text-center mt-4">
+                    Don&apos;t have an account?{' '}
+                    <Link to="/register" className="text-blue-600 hover:underline">
+                        Register
+                    </Link>
+                </p>
             </form>
         </div>
     );

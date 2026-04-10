@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { getApiErrorMessage } from '../../../common/api/error-message';
 import { fetchSwapContact } from '../services/swaps.service';
 import type { SwapContact } from '../types/swap.types';
 
@@ -20,8 +21,8 @@ export const useSwapContact = () => {
         ...prev,
         [swapId]: data,
       }));
-    } catch {
-      setError('Failed to fetch swap contact');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Failed to fetch swap contact'));
     } finally {
       setLoadingSwapId(null);
     }

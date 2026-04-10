@@ -14,4 +14,26 @@ export class CloudinaryService implements StorageService {
         .end(file);
     });
   }
+
+  async delete(url: string): Promise<void> {
+    try {
+      const parts = url.split('/');
+      const uploadIndex = parts.findIndex((part) => part === 'upload');
+
+      if (uploadIndex === -1 || uploadIndex + 1 >= parts.length) {
+        return;
+      }
+
+      const publicIdWithVersion = parts.slice(uploadIndex + 1).join('/');
+      const publicId = publicIdWithVersion.replace(/^v\d+\//, '').replace(/\.[^/.]+$/, '');
+
+      if (!publicId) {
+        return;
+      }
+
+      await cloudinary.uploader.destroy(publicId);
+    } catch {
+      // Best-effort cleanup; do not fail request if remote delete fails.
+    }
+  }
 }

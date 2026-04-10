@@ -27,6 +27,16 @@ const api = axios.create({
   withCredentials: true,
 });
 
+const isAuthEndpoint = (url?: string) => {
+  if (!url) return false;
+
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/refresh')
+  );
+};
+
 // attach token from memory
 api.interceptors.request.use((config) => {
   if (accessToken) {
@@ -39,21 +49,38 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (err: AxiosError) => {
-    const originalRequest = err.config;
+    const originalRequest = err.config as
+      | (typeof err.config & { _retry?: boolean })
+      | undefined;
 
-    if (err.response?.status === 401 && originalRequest?.url !== '/auth/refresh') {
-      const res = await api.post('/auth/refresh');
+    if (!originalRequest) {
+      return Promise.reject(err);
+    }
 
-      const newToken = (res.data as any).data.accessToken;
+    // Never try refresh flow for auth endpoints themselves.
+    if (isAuthEndpoint(originalRequest.url)) {
+      return Promise.reject(err);
+    }
 
-      setAxiosAccessToken(newToken);
-      onTokenRefreshed?.(newToken);
+    if (err.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
 
-      if (!originalRequest) {
+      try {
+        const res = await api.post('/auth/refresh');
+
+        const newToken = (res.data as any).data.accessToken;
+
+        setAxiosAccessToken(newToken);
+        onTokenRefreshed?.(newToken);
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        // If refresh fails, force local auth state clear.
+        setAxiosAccessToken(null);
+        onTokenRefreshed?.(null);
+
         return Promise.reject(err);
       }
-
-      return api(originalRequest);
     }
 
     return Promise.reject(err);

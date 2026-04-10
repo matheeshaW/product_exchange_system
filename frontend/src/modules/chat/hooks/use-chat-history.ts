@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../../common/api/axios.instance';
+import { getApiErrorMessage } from '../../../common/api/error-message';
 import type { ApiResponse } from '../../../common/api/api.types';
 import type { Message } from '../types/chat.types';
 
@@ -25,8 +26,8 @@ export const useChatHistory = (swapId: string) => {
         );
 
         setMessages(res.data.data);
-      } catch {
-        setError('Failed to load chat history');
+      } catch (error) {
+        setError(getApiErrorMessage(error, 'Failed to load chat history'));
       } finally {
         setLoading(false);
       }

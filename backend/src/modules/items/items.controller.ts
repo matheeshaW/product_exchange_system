@@ -2,6 +2,8 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
+  Delete,
   Body,
   UseGuards,
   Request,
@@ -13,15 +15,16 @@ import {
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('items')
-@UseGuards(JwtAuthGuard)
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) { }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 5))
   createItem(
     @Body() dto: CreateItemDto,
@@ -49,8 +52,34 @@ export class ItemsController {
   }
 
   @Get('my')
-  getMyItems(@Request() req) {
-    return this.itemsService.getMyItems(req.user.userId);
+  @UseGuards(JwtAuthGuard)
+  getMyItems(
+    @Request() req,
+    @Query('includeSwapped') includeSwapped?: string,
+  ) {
+    const shouldIncludeSwapped = includeSwapped === 'true';
+    return this.itemsService.getMyItems(req.user.userId, shouldIncludeSwapped);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('images', 5))
+  updateItem(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateItemDto,
+    @Request() req,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.itemsService.updateItem(id, req.user.userId, dto, files || []);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  deleteItem(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Request() req,
+  ) {
+    return this.itemsService.softDeleteItem(id, req.user.userId);
   }
 
   @Get(':id')

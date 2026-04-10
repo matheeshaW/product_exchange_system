@@ -14,7 +14,17 @@ interface AuthUser {
 interface AuthContextType {
   accessToken: string | null;
   user: AuthUser | null;
+  isAuthLoading: boolean;
+  register: (payload: {
+    email: string;
+    password: string;
+    name: string;
+    phone: string;
+    province: string;
+    district: string;
+  }) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,6 +44,7 @@ const decodeUserFromToken = (token: string): AuthUser => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const applyAccessToken = (token: string | null) => {
     setAccessToken(token);
@@ -59,6 +70,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return unregister;
   }, []);
 
+  // Rehydrate auth state on page refresh using HttpOnly refresh cookie.
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const res = await api.post<ApiResponse<{ accessToken: string }>>(
+          '/auth/refresh',
+        );
+
+        applyAccessToken(res.data.data.accessToken);
+      } catch {
+        applyAccessToken(null);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
   const login = async (email: string, password: string) => {
     try {
       const res = await api.post<ApiResponse<{ accessToken: string }>>(
@@ -75,8 +105,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const register = async (payload: {
+    email: string;
+    password: string;
+    name: string;
+    phone: string;
+    province: string;
+    district: string;
+  }) => {
+    try {
+      await api.post('/auth/register', payload);
+    } catch {
+      throw new Error('Registration failed');
+    }
+  };
+
+  const logout = () => {
+    applyAccessToken(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ accessToken, user, login }}>
+    <AuthContext.Provider
+      value={{
+        accessToken,
+        user,
+        isAuthLoading,
+        register,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

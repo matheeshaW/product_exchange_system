@@ -2,17 +2,21 @@ import {
   Injectable,
   InternalServerErrorException,
   Inject,
+  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, IsNull } from 'typeorm';
 import { Item } from './entities/item.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateItemDto } from './dto/create-item.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
 import { RedisService } from 'src/common/redis/redis.service';
 import type { StorageService } from 'src/common/storage/storage.interface';
 import { ItemImagesService } from '../item-images/item-images.service';
 import { AuditService } from '../audit/audit.service';
 import { ItemImage } from '../item-images/entities/item-image.entity';
+import { ItemStatus } from './entities/item.entity';
 
 @Injectable()
 export class ItemsService {
@@ -33,6 +37,13 @@ export class ItemsService {
     private readonly itemImageRepository: Repository<ItemImage>,
   ) { }
 
+  private async invalidateItemCaches(itemId?: string) {
+    await this.redisService.deleteByPrefix('inventory:items:');
+    if (itemId) {
+      await this.redisService.del(`inventory:item:${itemId}`);
+    }
+  }
+
   async createItem(dto: CreateItemDto, userId: string, files: Express.Multer.File[]) {
     try {
       const item = this.itemRepository.create({
@@ -52,7 +63,7 @@ export class ItemsService {
 
       await this.itemImagesService.saveImages(saved.id, imageUrls);
 
-      await this.redisService.deleteByPrefix('inventory:items:'); // invalidate cache
+      await this.invalidateItemCaches(saved.id);
       try { 
       await this.auditService.logAction({
         entityType: 'ITEM',
@@ -99,7 +110,8 @@ export class ItemsService {
 
     const query = this.itemRepository
       .createQueryBuilder('item')
-      .where('item.deleted_at IS NULL');
+      .where('item.deleted_at IS NULL')
+      .andWhere('item.status = :status', { status: ItemStatus.AVAILABLE });
 
     //  search
     if (filters.search) {
@@ -222,11 +234,15 @@ async getItemById(itemId: string) {
 
     // fetch item
     const item = await this.itemRepository.findOne({
-      where: { id: itemId, deletedAt: IsNull() },
+      where: {
+        id: itemId,
+        deletedAt: IsNull(),
+        status: ItemStatus.AVAILABLE,
+      },
     });
 
     if (!item) {
-      throw new InternalServerErrorException('Item not found');
+      throw new BadRequestException('Item not found');
     }
 
     // fetch images
@@ -248,13 +264,16 @@ async getItemById(itemId: string) {
       data: itemWithImages,
     };
   } catch (error) {
+    if (error instanceof BadRequestException) {
+      throw error;
+    }
     throw new InternalServerErrorException('Failed to fetch item');
   }
 }
 
-async getMyItems(userId: string) {
+async getMyItems(userId: string, includeSwapped = false) {
   try {
-    const cacheKey = `inventory:items:my:${userId}`;
+    const cacheKey = `inventory:items:my:${userId}:${includeSwapped}`;
     const cached = await this.redisService.get(cacheKey);
 
     if (cached) {
@@ -265,8 +284,21 @@ async getMyItems(userId: string) {
       };
     }
 
+    const whereClause: {
+      ownerId: string;
+      deletedAt: ReturnType<typeof IsNull>;
+      status?: ItemStatus;
+    } = {
+      ownerId: userId,
+      deletedAt: IsNull(),
+    };
+
+    if (!includeSwapped) {
+      whereClause.status = ItemStatus.AVAILABLE;
+    }
+
     const items = await this.itemRepository.find({
-      where: { ownerId: userId, deletedAt: IsNull() },
+      where: whereClause,
       order: { createdAt: 'DESC' },
     });
 
@@ -301,6 +333,125 @@ async getMyItems(userId: string) {
     };
   } catch (error) {
     throw new InternalServerErrorException('Failed to fetch user items');
+  }
+}
+
+async updateItem(
+  itemId: string,
+  userId: string,
+  dto: UpdateItemDto,
+  files: Express.Multer.File[] = [],
+) {
+  try {
+    const item = await this.itemRepository.findOne({
+      where: { id: itemId, deletedAt: IsNull() },
+    });
+
+    if (!item) {
+      throw new BadRequestException('Item not found');
+    }
+
+    if (item.ownerId !== userId) {
+      throw new ForbiddenException('Not allowed to update this item');
+    }
+
+    if (item.status === ItemStatus.SWAPPED) {
+      throw new BadRequestException('Swapped items cannot be edited');
+    }
+
+    if (dto.title !== undefined) item.title = dto.title;
+    if (dto.description !== undefined) item.description = dto.description;
+    if (dto.category !== undefined) item.category = dto.category;
+    if (dto.condition !== undefined) item.condition = dto.condition;
+
+    const updated = await this.itemRepository.save(item);
+
+    const existingImages = await this.itemImagesService.getImagesByItemId(itemId);
+
+    const keepImageUrls = dto.keepImageUrls ?? existingImages.map((img) => img.imageUrl);
+
+    const imageUrlsToDelete = existingImages
+      .map((img) => img.imageUrl)
+      .filter((url) => !keepImageUrls.includes(url));
+
+    if (imageUrlsToDelete.length > 0) {
+      await this.itemImagesService.deleteByItemIdAndUrls(itemId, imageUrlsToDelete);
+
+      for (const imageUrl of imageUrlsToDelete) {
+        await this.storageService.delete?.(imageUrl);
+      }
+    }
+
+    if (files.length > 0) {
+      const newImageUrls: string[] = [];
+
+      for (const file of files) {
+        const uploadedUrl = await this.storageService.upload(file.buffer);
+        newImageUrls.push(uploadedUrl);
+      }
+
+      await this.itemImagesService.saveImages(itemId, newImageUrls);
+    }
+
+    const refreshedImages = await this.itemImagesService.getImagesByItemId(itemId);
+
+    await this.invalidateItemCaches(itemId);
+
+    return {
+      success: true,
+      message: 'Item updated successfully',
+      data: {
+        ...updated,
+        images: refreshedImages.map((img) => img.imageUrl),
+      },
+    };
+  } catch (error) {
+    if (
+      error instanceof BadRequestException ||
+      error instanceof ForbiddenException
+    ) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException('Failed to update item');
+  }
+}
+
+async softDeleteItem(itemId: string, userId: string) {
+  try {
+    const item = await this.itemRepository.findOne({
+      where: { id: itemId, deletedAt: IsNull() },
+    });
+
+    if (!item) {
+      throw new BadRequestException('Item not found');
+    }
+
+    if (item.ownerId !== userId) {
+      throw new ForbiddenException('Not allowed to delete this item');
+    }
+
+    if (item.status === ItemStatus.SWAPPED) {
+      throw new BadRequestException('Swapped items cannot be deleted');
+    }
+
+    await this.itemRepository.softDelete(itemId);
+    await this.invalidateItemCaches(itemId);
+
+    return {
+      success: true,
+      message: 'Item deleted successfully',
+      data: null,
+    };
+  } catch (error) {
+    if (
+      error instanceof BadRequestException ||
+      error instanceof ForbiddenException
+    ) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException('Failed to delete item');
   }
 }
 }

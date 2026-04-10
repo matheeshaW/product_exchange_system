@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../../common/api/axios.instance';
+import { getApiErrorMessage } from '../../../common/api/error-message';
 import type { Item } from '../../../modules/items/types/item.types';
 import type { ApiResponse } from '../../../common/api/api.types';
 import { createSwapRequest } from '../services/swaps.service';
@@ -32,8 +33,7 @@ const SwapRequestModal = ({
                 const res = await api.get<ApiResponse<Item[]>>('/items/my');
                 setMyItems(res.data.data);
             } catch (err) {
-                console.error('Failed to fetch user items');
-                setError('Failed to load your items');
+                setError(getApiErrorMessage(err, 'Failed to load your items'));
             }
         };
 
@@ -62,8 +62,7 @@ const SwapRequestModal = ({
             alert('Swap request sent!');
             onClose();
         } catch (err) {
-            console.error('Failed to create swap');
-            setError('Failed to create swap request');
+            setError(getApiErrorMessage(err, 'Failed to create swap request'));
         } finally {
             setLoading(false);
         }

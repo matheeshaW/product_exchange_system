@@ -9,9 +9,10 @@ import { In, IsNull, Repository } from 'typeorm';
 import { Swap, SwapStatus } from './entities/swap.entity';
 import { CreateSwapDto } from './dto/create-swap.dto';
 import { UpdateSwapDto } from './dto/update-swap.dto';
-import { Item } from '../items/entities/item.entity';
+import { Item, ItemStatus } from '../items/entities/item.entity';
 import { User } from '../users/entities/user.entity';
 import { AuditService } from '../audit/audit.service';
+import { RedisService } from 'src/common/redis/redis.service';
 
 @Injectable()
 export class SwapsService {
@@ -26,6 +27,7 @@ export class SwapsService {
     private readonly userRepository: Repository<User>,
 
     private readonly auditService: AuditService,
+    private readonly redisService: RedisService,
   ) { }
 
   async createSwap(dto: CreateSwapDto, userId: string) {
@@ -37,7 +39,11 @@ export class SwapsService {
 
       // get requested item
       const requestedItem = await this.itemRepository.findOne({
-        where: { id: dto.requestedItemId },
+        where: {
+          id: dto.requestedItemId,
+          deletedAt: IsNull(),
+          status: ItemStatus.AVAILABLE,
+        },
       });
 
       if (!requestedItem) {
@@ -59,7 +65,11 @@ export class SwapsService {
       // offered item must belong to requester
       if (dto.offeredItemId) {
         const offeredItem = await this.itemRepository.findOne({
-          where: { id: dto.offeredItemId },
+          where: {
+            id: dto.offeredItemId,
+            deletedAt: IsNull(),
+            status: ItemStatus.AVAILABLE,
+          },
         });
 
         if (!offeredItem) {
@@ -116,6 +126,54 @@ export class SwapsService {
 
       if (swap.ownerId !== userId) {
         throw new ForbiddenException('Not allowed');
+      }
+
+      if (swap.status !== SwapStatus.PENDING) {
+        throw new BadRequestException('Swap is already finalized');
+      }
+
+      if (dto.status === SwapStatus.ACCEPTED) {
+        await this.swapRepository.manager.transaction(async (manager) => {
+          const requestedItem = await manager.findOne(Item, {
+            where: {
+              id: swap.requestedItemId,
+              deletedAt: IsNull(),
+              status: ItemStatus.AVAILABLE,
+            },
+          });
+
+          if (!requestedItem) {
+            throw new BadRequestException('Requested item is no longer available');
+          }
+
+          requestedItem.status = ItemStatus.SWAPPED;
+          await manager.save(Item, requestedItem);
+
+          if (swap.offeredItemId) {
+            const offeredItem = await manager.findOne(Item, {
+              where: {
+                id: swap.offeredItemId,
+                deletedAt: IsNull(),
+                status: ItemStatus.AVAILABLE,
+              },
+            });
+
+            if (!offeredItem) {
+              throw new BadRequestException('Offered item is no longer available');
+            }
+
+            offeredItem.status = ItemStatus.SWAPPED;
+            await manager.save(Item, offeredItem);
+          }
+
+          swap.status = dto.status;
+          await manager.save(Swap, swap);
+        });
+
+        await this.redisService.deleteByPrefix('inventory:items:');
+        await this.redisService.deleteByPrefix('inventory:item:');
+
+        return this.swapRepository.findOne({ where: { id: swapId } });
       }
 
       swap.status = dto.status;
