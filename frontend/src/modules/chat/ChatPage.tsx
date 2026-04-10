@@ -23,12 +23,19 @@ const ChatPage = () => {
   if (error) return <EmptyState message={error} />;
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-xl font-bold mb-2">Chat</h1>
+    <div className="mx-auto max-w-4xl space-y-4">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Conversation</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900">Swap Chat</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Coordinate item handover and finalize your swap details here.
+        </p>
+      </section>
 
-      <ChatWindow messages={messages} />
-
-      <MessageInput swapId={swapId} />
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <ChatWindow messages={messages} />
+        <MessageInput swapId={swapId} />
+      </section>
     </div>
   );
 };

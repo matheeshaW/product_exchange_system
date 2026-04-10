@@ -18,7 +18,7 @@ const ChatWindow = ({ messages }: Props) => {
   }, [messages]);
 
   return (
-    <div className="flex flex-col gap-2 p-4 h-[400px] overflow-y-auto">
+    <div className="flex h-[460px] flex-col gap-3 overflow-y-auto bg-slate-50/70 p-4 sm:p-5">
       {messages.length === 0 && (
         <EmptyState message="No messages yet. Start the conversation." />
       )}
