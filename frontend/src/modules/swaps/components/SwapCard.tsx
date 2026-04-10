@@ -24,20 +24,20 @@ const SwapCard = ({
   loadingContact = false,
 }: Props) => {
   return (
-    <div className="border p-3 rounded mb-2">
-      <div className="mb-2 flex items-center justify-between">
+    <article className="mb-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
         <p className="text-sm text-gray-600">
           Type: {swap.isDonation ? 'Donation' : 'Swap'}
         </p>
         <SwapStatusBadge status={swap.status} />
       </div>
 
-      <p>
+      <p className="text-sm text-slate-700">
         Requested Item:{' '}
         {swap.requestedItem ? (
           <Link
             to={`/items/${swap.requestedItem.id}`}
-            className="text-blue-600 underline hover:text-blue-700"
+            className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-slate-700"
           >
             {swap.requestedItem.title}
           </Link>
@@ -46,14 +46,14 @@ const SwapCard = ({
         )}
       </p>
 
-      <p>
+      <p className="mt-1 text-sm text-slate-700">
         Offered Item:{' '}
         {swap.isDonation ? (
           'Donation (no return item)'
         ) : swap.offeredItem ? (
           <Link
             to={`/items/${swap.offeredItem.id}`}
-            className="text-blue-600 underline hover:text-blue-700"
+            className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-slate-700"
           >
             {swap.offeredItem.title}
           </Link>
@@ -62,10 +62,10 @@ const SwapCard = ({
         )}
       </p>
 
-      <div className="mt-2 flex gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           onClick={() => onOpenChat(swap.id)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white transition hover:bg-slate-800"
         >
           Open Chat
         </button>
@@ -74,14 +74,14 @@ const SwapCard = ({
           <>
             <button
               onClick={() => onAccept?.(swap.id)}
-              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm text-white transition hover:bg-emerald-700"
             >
               Accept
             </button>
 
             <button
               onClick={() => onReject?.(swap.id)}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+              className="rounded-lg bg-rose-600 px-3 py-1.5 text-sm text-white transition hover:bg-rose-700"
             >
               Reject
             </button>
@@ -91,7 +91,7 @@ const SwapCard = ({
         {swap.status === 'ACCEPTED' && (
           <button
             onClick={() => onViewContact?.(swap.id)}
-            className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded"
+            className="rounded-lg bg-slate-600 px-3 py-1.5 text-sm text-white transition hover:bg-slate-700"
           >
             {loadingContact ? 'Loading Contacts...' : 'View Contacts'}
           </button>
@@ -99,8 +99,8 @@ const SwapCard = ({
       </div>
 
       {contact && (
-        <div className="mt-3 rounded bg-gray-50 p-3 text-sm">
-          <p className="font-semibold mb-1">Contact Details</p>
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+          <p className="mb-1 font-semibold text-slate-900">Contact Details</p>
           <p>
             Requester: {contact.requester.name || 'N/A'} ({contact.requester.email || 'N/A'})
             {contact.requester.phone ? ` - ${contact.requester.phone}` : ''}
@@ -111,7 +111,7 @@ const SwapCard = ({
           </p>
         </div>
       )}
-    </div>
+    </article>
   );
 };
 

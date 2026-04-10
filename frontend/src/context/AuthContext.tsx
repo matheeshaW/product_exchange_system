@@ -9,6 +9,7 @@ import {
 interface AuthUser {
   id: string;
   email: string;
+  name?: string | null;
 }
 
 interface AuthContextType {
@@ -38,6 +39,7 @@ const decodeUserFromToken = (token: string): AuthUser => {
   return {
     id: payload.sub,
     email: payload.email,
+    name: payload.name || null,
   };
 };
 

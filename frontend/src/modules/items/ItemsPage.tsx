@@ -5,6 +5,7 @@ import type { Item } from './types/item.types';
 import type { ApiResponse } from '../../common/api/api.types';
 import ItemCard from './components/ItemCard';
 import ItemFilters from './components/ItemFilters';
+import EmptyState from '../../common/components/EmptyState';
 
 const ItemsPage = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -53,26 +54,34 @@ const ItemsPage = () => {
   };
 
   if (loading) {
-    return <div className="p-4">Loading items...</div>;
+    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">Loading items...</div>;
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">
-        Available Items
-      </h1>
+    <div className="space-y-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Marketplace</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">Discover Items</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Browse available listings and request swaps or donations in a few clicks.
+        </p>
+      </section>
+
       <ItemFilters onFilterChange={handleFilterChange} />
 
       {error && (
-        <p className="mb-4 text-sm text-red-600">{error}</p>
+        <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>
       )}
 
-      {/* GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {items.map((item) => (
-          <ItemCard key={item.id} item={item} />
-        ))}
-      </div>
+      {items.length === 0 ? (
+        <EmptyState message="No items match your filters yet." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {items.map((item) => (
+            <ItemCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

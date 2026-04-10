@@ -3,7 +3,11 @@ interface Props {
 }
 
 const EmptyState = ({ message }: Props) => {
-  return <div className="p-6 text-center text-gray-500">{message}</div>;
+  return (
+    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+      {message}
+    </div>
+  );
 };
 
 export default EmptyState;
