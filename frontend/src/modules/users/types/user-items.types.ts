@@ -5,6 +5,8 @@ export interface UpdateMyItemPayload {
   description?: string;
   category?: string;
   condition?: string;
+  keepImageUrls?: string[];
+  newImages?: File[];
 }
 
 export type MyItem = Item;

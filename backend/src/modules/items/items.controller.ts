@@ -63,12 +63,14 @@ export class ItemsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('images', 5))
   updateItem(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateItemDto,
     @Request() req,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.itemsService.updateItem(id, req.user.userId, dto);
+    return this.itemsService.updateItem(id, req.user.userId, dto, files || []);
   }
 
   @Delete(':id')

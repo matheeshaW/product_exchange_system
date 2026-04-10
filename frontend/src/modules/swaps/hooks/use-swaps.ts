@@ -33,12 +33,8 @@ export const useSwaps = () => {
       try {
         setError(null);
         await updateSwapStatus(id, status);
-
-        setSwaps((prev) =>
-          prev.map((swap) =>
-            swap.id === id ? { ...swap, status } : swap,
-          ),
-        );
+        const fresh = await fetchMySwaps();
+        setSwaps(fresh);
       } catch (error) {
         setError(getApiErrorMessage(error, 'Failed to update swap'));
       }

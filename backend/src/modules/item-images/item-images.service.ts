@@ -17,4 +17,25 @@ export class ItemImagesService {
 
     return this.repo.save(images);
   }
+
+  async getImagesByItemId(itemId: string) {
+    return this.repo.find({
+      where: { itemId },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async deleteByItemIdAndUrls(itemId: string, imageUrls: string[]) {
+    if (imageUrls.length === 0) {
+      return;
+    }
+
+    await this.repo
+      .createQueryBuilder()
+      .delete()
+      .from(ItemImage)
+      .where('item_id = :itemId', { itemId })
+      .andWhere('image_url IN (:...imageUrls)', { imageUrls })
+      .execute();
+  }
 }

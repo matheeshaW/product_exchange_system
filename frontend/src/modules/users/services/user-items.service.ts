@@ -8,7 +8,24 @@ export const fetchMyItems = async () => {
 };
 
 export const updateMyItem = async (itemId: string, payload: UpdateMyItemPayload) => {
-  const res = await api.patch<ApiResponse<MyItem>>(`/items/${itemId}`, payload);
+  const formData = new FormData();
+
+  if (payload.title !== undefined) formData.append('title', payload.title);
+  if (payload.description !== undefined) formData.append('description', payload.description);
+  if (payload.category !== undefined) formData.append('category', payload.category);
+  if (payload.condition !== undefined) formData.append('condition', payload.condition);
+
+  formData.append('keepImageUrls', JSON.stringify(payload.keepImageUrls || []));
+
+  (payload.newImages || []).forEach((file) => {
+    formData.append('images', file);
+  });
+
+  const res = await api.patch<ApiResponse<MyItem>>(`/items/${itemId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return res.data.data;
 };
 

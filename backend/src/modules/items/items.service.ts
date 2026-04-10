@@ -336,7 +336,12 @@ async getMyItems(userId: string, includeSwapped = false) {
   }
 }
 
-async updateItem(itemId: string, userId: string, dto: UpdateItemDto) {
+async updateItem(
+  itemId: string,
+  userId: string,
+  dto: UpdateItemDto,
+  files: Express.Multer.File[] = [],
+) {
   try {
     const item = await this.itemRepository.findOne({
       where: { id: itemId, deletedAt: IsNull() },
@@ -350,6 +355,10 @@ async updateItem(itemId: string, userId: string, dto: UpdateItemDto) {
       throw new ForbiddenException('Not allowed to update this item');
     }
 
+    if (item.status === ItemStatus.SWAPPED) {
+      throw new BadRequestException('Swapped items cannot be edited');
+    }
+
     if (dto.title !== undefined) item.title = dto.title;
     if (dto.description !== undefined) item.description = dto.description;
     if (dto.category !== undefined) item.category = dto.category;
@@ -357,12 +366,44 @@ async updateItem(itemId: string, userId: string, dto: UpdateItemDto) {
 
     const updated = await this.itemRepository.save(item);
 
+    const existingImages = await this.itemImagesService.getImagesByItemId(itemId);
+
+    const keepImageUrls = dto.keepImageUrls ?? existingImages.map((img) => img.imageUrl);
+
+    const imageUrlsToDelete = existingImages
+      .map((img) => img.imageUrl)
+      .filter((url) => !keepImageUrls.includes(url));
+
+    if (imageUrlsToDelete.length > 0) {
+      await this.itemImagesService.deleteByItemIdAndUrls(itemId, imageUrlsToDelete);
+
+      for (const imageUrl of imageUrlsToDelete) {
+        await this.storageService.delete?.(imageUrl);
+      }
+    }
+
+    if (files.length > 0) {
+      const newImageUrls: string[] = [];
+
+      for (const file of files) {
+        const uploadedUrl = await this.storageService.upload(file.buffer);
+        newImageUrls.push(uploadedUrl);
+      }
+
+      await this.itemImagesService.saveImages(itemId, newImageUrls);
+    }
+
+    const refreshedImages = await this.itemImagesService.getImagesByItemId(itemId);
+
     await this.invalidateItemCaches(itemId);
 
     return {
       success: true,
       message: 'Item updated successfully',
-      data: updated,
+      data: {
+        ...updated,
+        images: refreshedImages.map((img) => img.imageUrl),
+      },
     };
   } catch (error) {
     if (
@@ -388,6 +429,10 @@ async softDeleteItem(itemId: string, userId: string) {
 
     if (item.ownerId !== userId) {
       throw new ForbiddenException('Not allowed to delete this item');
+    }
+
+    if (item.status === ItemStatus.SWAPPED) {
+      throw new BadRequestException('Swapped items cannot be deleted');
     }
 
     await this.itemRepository.softDelete(itemId);
