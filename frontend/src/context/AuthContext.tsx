@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react';
 import api from '../common/api/axios.instance';
 import type { ApiResponse } from '../common/api/api.types';
+import { getAccessTokenFromAuthHeader } from '../common/api/access-token';
 import {
   registerTokenRefreshHandler,
   setAxiosAccessToken,
@@ -8,7 +9,8 @@ import {
 
 interface AuthUser {
   id: string;
-  email: string;
+  email?: string | null;
+  name?: string | null;
 }
 
 interface AuthContextType {
@@ -37,7 +39,8 @@ const decodeUserFromToken = (token: string): AuthUser => {
 
   return {
     id: payload.sub,
-    email: payload.email,
+    email: null,
+    name: null,
   };
 };
 
@@ -45,6 +48,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  const hydrateUserProfile = async () => {
+    try {
+      const profileRes = await api.get<ApiResponse<{ id: string; email: string; name: string | null }>>('/users/me');
+
+      setUser((prev) => {
+        if (!prev) {
+          return {
+            id: profileRes.data.data.id,
+            email: profileRes.data.data.email,
+            name: profileRes.data.data.name,
+          };
+        }
+
+        return {
+          ...prev,
+          email: profileRes.data.data.email,
+          name: profileRes.data.data.name,
+        };
+      });
+    } catch {
+      // Keep minimal token-derived user if profile hydration fails.
+    }
+  };
 
   const applyAccessToken = (token: string | null) => {
     setAccessToken(token);
@@ -65,6 +92,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unregister = registerTokenRefreshHandler((newToken) => {
       applyAccessToken(newToken);
+
+      if (newToken) {
+        void hydrateUserProfile();
+      }
     });
 
     return unregister;
@@ -74,11 +105,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const res = await api.post<ApiResponse<{ accessToken: string }>>(
-          '/auth/refresh',
+        const res = await api.post('/auth/refresh');
+
+        const token = getAccessTokenFromAuthHeader(
+          (res.headers as Record<string, string>)?.authorization,
         );
 
-        applyAccessToken(res.data.data.accessToken);
+        if (!token) {
+          throw new Error('Access token missing in refresh response');
+        }
+
+        applyAccessToken(token);
+        await hydrateUserProfile();
       } catch {
         applyAccessToken(null);
       } finally {
@@ -91,15 +129,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const res = await api.post<ApiResponse<{ accessToken: string }>>(
+      const res = await api.post(
         '/auth/login',
         { email, password }
       );
 
-      const token = res.data.data.accessToken;
+      const token = getAccessTokenFromAuthHeader(
+        (res.headers as Record<string, string>)?.authorization,
+      );
+
+      if (!token) {
+        throw new Error('Access token missing in login response');
+      }
 
       applyAccessToken(token);
-      
+      await hydrateUserProfile();
     } catch (error) {
       throw new Error('Invalid credentials');
     }

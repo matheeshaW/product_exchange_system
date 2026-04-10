@@ -21,18 +21,27 @@ const MessageInput = ({ swapId }: Props) => {
     setText('');
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   return (
-    <div className="flex gap-2 p-2 border-t">
+    <div className="flex items-center gap-2 border-t border-slate-200 bg-white p-3 sm:p-4">
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="flex-1 border p-2 rounded"
+        onKeyDown={handleKeyDown}
+        className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none"
         placeholder="Type a message..."
       />
 
       <button
         onClick={sendMessage}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded"
+        disabled={!text.trim()}
+        className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
       >
         Send
       </button>
