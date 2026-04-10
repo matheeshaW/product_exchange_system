@@ -20,7 +20,10 @@ const Navbar = () => {
         <Link to="/swaps">Swaps</Link>
 
         {auth?.accessToken && (
-          <Link to="/profile">Profile</Link>
+          <>
+            <Link to="/items/create">Create Item</Link>
+            <Link to="/profile">Profile</Link>
+          </>
         )}
 
         {!auth?.accessToken && (
