@@ -17,11 +17,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('items')
-@UseGuards(JwtAuthGuard)
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) { }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 5))
   createItem(
     @Body() dto: CreateItemDto,
@@ -49,6 +49,7 @@ export class ItemsController {
   }
 
   @Get('my')
+  @UseGuards(JwtAuthGuard)
   getMyItems(@Request() req) {
     return this.itemsService.getMyItems(req.user.userId);
   }

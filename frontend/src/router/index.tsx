@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import LoginPage from '../modules/auth/LoginPage';
+import RegisterPage from '../modules/auth/RegisterPage';
 import ItemsPage from '../modules/items/ItemsPage';
 import ItemDetailsPage from '../modules/items/ItemDetailsPage';
 import SwapsPage from '../modules/swaps/SwapsPage';
@@ -9,9 +10,10 @@ import AuthGuard from '../common/guards/AuthGuard';
 const Router = () => {
   return (
     <Routes>
-      <Route path="/" element={<AuthGuard><ItemsPage /></AuthGuard>} />
+      <Route path="/" element={<ItemsPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/items/:id" element={<AuthGuard><ItemDetailsPage /></AuthGuard>} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/items/:id" element={<ItemDetailsPage />} />
       <Route
         path="/swaps"
         element={
