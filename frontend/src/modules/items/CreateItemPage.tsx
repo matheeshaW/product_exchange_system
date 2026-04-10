@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateItem } from './hooks/use-create-item';
 import ItemForm from './components/ItemForm';
@@ -6,15 +7,41 @@ import type { ItemFormData } from './types/create-item.types';
 const CreateItemPage = () => {
   const navigate = useNavigate();
   const { loading, error, success, createItem, resetForm } = useCreateItem();
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!success) {
+      setRedirectCountdown(null);
+      return;
+    }
+
+    setRedirectCountdown(3);
+
+    const countdownTimer = window.setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          window.clearInterval(countdownTimer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const redirectTimer = window.setTimeout(() => {
+      navigate('/');
+    }, 3000);
+
+    return () => {
+      window.clearInterval(countdownTimer);
+      window.clearTimeout(redirectTimer);
+    };
+  }, [success, navigate]);
 
   const handleFormSubmit = async (formData: ItemFormData, images: File[]) => {
     const success = await createItem(formData, images);
 
     if (success) {
       resetForm();
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
     }
   };
 
@@ -46,7 +73,9 @@ const CreateItemPage = () => {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-green-800">Item created successfully!</h3>
-              <p className="mt-1 text-sm text-green-700">Redirecting to home page...</p>
+              <p className="mt-1 text-sm text-green-700">
+                Redirecting to home page in {redirectCountdown ?? 3}s...
+              </p>
             </div>
           </div>
         </div>
