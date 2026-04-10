@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getApiErrorMessage } from '../../../common/api/error-message';
 import {
   changeMyPassword,
   deleteMyAccount,
@@ -22,8 +23,8 @@ export const useProfile = () => {
       setError(null);
       const data = await fetchMyProfile();
       setProfile(data);
-    } catch {
-      setError('Failed to load profile');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Failed to load profile'));
     } finally {
       setLoading(false);
     }

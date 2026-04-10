@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AuthContext } from '../../../context/AuthContext';
+import { getApiErrorMessage } from '../../../common/api/error-message';
 import { fetchMySwaps, updateSwapStatus } from '../services/swaps.service';
 import type { Swap } from '../types/swap.types';
 
@@ -16,8 +17,8 @@ export const useSwaps = () => {
       setError(null);
       const data = await fetchMySwaps();
       setSwaps(data);
-    } catch {
-      setError('Failed to load swaps');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Failed to load swaps'));
     } finally {
       setLoading(false);
     }
@@ -38,8 +39,8 @@ export const useSwaps = () => {
             swap.id === id ? { ...swap, status } : swap,
           ),
         );
-      } catch {
-        setError('Failed to update swap');
+      } catch (error) {
+        setError(getApiErrorMessage(error, 'Failed to update swap'));
       }
     },
     [],

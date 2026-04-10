@@ -2,6 +2,7 @@ import { useState, useContext } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { getApiErrorMessage } from '../../common/api/error-message';
 
 const LoginPage = () => {
     const auth = useContext(AuthContext);
@@ -31,7 +32,7 @@ const LoginPage = () => {
             // redirect after login
             navigate('/');
         } catch (err) {
-            setError('Invalid email or password');
+            setError(getApiErrorMessage(err, 'Invalid email or password'));
         } finally {
             setLoading(false);
         }

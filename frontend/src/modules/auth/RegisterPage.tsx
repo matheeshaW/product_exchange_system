@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { getApiErrorMessage } from '../../common/api/error-message';
 
 const RegisterPage = () => {
   const auth = useContext(AuthContext);
@@ -41,8 +42,8 @@ const RegisterPage = () => {
 
       setSuccess('Registration successful. Redirecting to login...');
       setTimeout(() => navigate('/login'), 900);
-    } catch {
-      setError('Registration failed. Please check your details.');
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Registration failed. Please check your details.'));
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 import api from '../../../common/api/axios.instance';
+import { getApiErrorMessage } from '../../../common/api/error-message';
 import type { CreateItemPayload, CreateItemResponse } from '../types/create-item.types';
 
 export const itemsCreationService = {
@@ -23,10 +24,7 @@ export const itemsCreationService = {
 
       return response.data;
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(error.message || 'Failed to create item');
-      }
-      throw new Error('Failed to create item');
+      throw new Error(getApiErrorMessage(error, 'Failed to create item'));
     }
   },
 };

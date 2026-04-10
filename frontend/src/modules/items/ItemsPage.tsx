@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../common/api/axios.instance';
+import { getApiErrorMessage } from '../../common/api/error-message';
 import type { Item } from './types/item.types';
 import type { ApiResponse } from '../../common/api/api.types';
 import ItemCard from './components/ItemCard';
@@ -8,6 +9,7 @@ import ItemFilters from './components/ItemFilters';
 const ItemsPage = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -19,6 +21,7 @@ const ItemsPage = () => {
 
   const fetchItems = async (filtersData = filters) => {
     try {
+      setError(null);
       const query = new URLSearchParams();
 
       Object.entries(filtersData).forEach(([key, value]) => {
@@ -33,7 +36,7 @@ const ItemsPage = () => {
 
       setItems(res.data.data);
     } catch (error) {
-      console.error('Failed to fetch items', error);
+      setError(getApiErrorMessage(error, 'Failed to fetch items'));
     }
     finally {
       setLoading(false);
@@ -59,6 +62,10 @@ const ItemsPage = () => {
         Available Items
       </h1>
       <ItemFilters onFilterChange={handleFilterChange} />
+
+      {error && (
+        <p className="mb-4 text-sm text-red-600">{error}</p>
+      )}
 
       {/* GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
