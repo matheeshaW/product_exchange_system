@@ -6,7 +6,7 @@ import type { ItemFormData } from './types/create-item.types';
 
 const CreateItemPage = () => {
   const navigate = useNavigate();
-  const { loading, error, success, createItem, resetForm } = useCreateItem();
+  const { loading, error, success, createItem } = useCreateItem();
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
 
   useEffect(() => {
@@ -40,8 +40,8 @@ const CreateItemPage = () => {
   const handleFormSubmit = async (formData: ItemFormData, images: File[]) => {
     const success = await createItem(formData, images);
 
-    if (success) {
-      resetForm();
+    if (!success) {
+      setRedirectCountdown(null);
     }
   };
 
