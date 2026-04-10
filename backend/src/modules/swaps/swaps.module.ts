@@ -6,10 +6,12 @@ import { Swap } from './entities/swap.entity';
 import { Item } from '../items/entities/item.entity';
 import { User } from '../users/entities/user.entity';
 import { AuditModule } from '../audit/audit.module';
+import { RedisModule } from 'src/common/redis/redis.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Swap, Item, User]),
-    AuditModule],
+    AuditModule,
+    RedisModule],
   providers: [SwapsService],
   controllers: [SwapsController]
 })

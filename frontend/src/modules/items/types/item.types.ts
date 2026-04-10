@@ -6,6 +6,9 @@ export interface Item {
   category: string;
   condition: string;
   ownerId: string;
+  status: 'AVAILABLE' | 'SWAPPED';
   createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
   images?: string[]; 
 }

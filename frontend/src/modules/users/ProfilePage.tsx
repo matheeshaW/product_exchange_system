@@ -4,7 +4,9 @@ import Spinner from '../../common/components/Spinner';
 import { AuthContext } from '../../context/AuthContext';
 import ChangePasswordModal from './components/ChangePasswordModal';
 import DeleteAccountModal from './components/DeleteAccountModal';
+import MyItemsSection from './components/MyItemsSection';
 import ProfileInfoCard from './components/ProfileInfoCard';
+import { useMyItems } from './hooks/use-my-items';
 import { useProfile } from './hooks/use-profile';
 
 const ProfilePage = () => {
@@ -22,6 +24,16 @@ const ProfilePage = () => {
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const {
+    items,
+    loading: itemsLoading,
+    error: itemsError,
+    savingId,
+    deletingId,
+    saveItem,
+    removeItem,
+  } = useMyItems();
 
   const handleDeleteAccount = async (payload: { password: string }) => {
     await deleteAccount(payload);
@@ -76,6 +88,16 @@ const ProfilePage = () => {
           </button>
         </div>
       </section>
+
+      <MyItemsSection
+        items={items}
+        loading={itemsLoading}
+        error={itemsError}
+        savingId={savingId}
+        deletingId={deletingId}
+        onSave={saveItem}
+        onDelete={removeItem}
+      />
 
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
