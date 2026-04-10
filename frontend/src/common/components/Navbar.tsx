@@ -19,6 +19,15 @@ const Navbar = () => {
         <Link to="/">Items</Link>
         <Link to="/swaps">Swaps</Link>
 
+        {!auth?.accessToken && (
+          <button
+            onClick={() => navigate('/login')}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+          >
+            Login
+          </button>
+        )}
+
         {auth?.accessToken && (
           <button
             onClick={handleLogout}
