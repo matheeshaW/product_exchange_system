@@ -16,10 +16,12 @@ export class AuthController {
   async login(@Body() dto: LoginDto, @Res() res) {
     const result = await this.authService.login(dto);
 
+    const isProduction = process.env.NODE_ENV === 'production';
+
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
 
     res.setHeader('Authorization', `Bearer ${result.accessToken}`);
