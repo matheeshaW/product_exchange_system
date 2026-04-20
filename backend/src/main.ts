@@ -23,6 +23,7 @@ async function bootstrap() {
       'http://localhost:5173',
       'http://127.0.0.1:5173',
       'http://localhost:3000',
+      'https://YOUR-VERCEL-URL.vercel.app',
     ],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
